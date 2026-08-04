@@ -1,0 +1,14 @@
+# Maven 构建输出
+target/
+
+# 仿真运行输出
+output/
+
+# IDE 和本地工具文件
+.idea/
+.vscode/
+*.iml
+
+# 本地日志和临时文件
+*.log
+*.tmp
