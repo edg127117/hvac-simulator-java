@@ -37,7 +37,7 @@
 - 基准模式按全部时间步和字段进行数值对照；
 - 详细架构、依赖、误差和测试设计查看 [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md)。
 
-上述内容是已确认目标，不表示当前已经完成实现。当前完成状态以 `PROJECT_STATUS.md`、代码和自动化测试为准。
+上述技术方案已经在当前 Java 工程中实现。当前合并状态和仍需人工确认的事项以 `PROJECT_STATUS.md` 为准。
 
 后续是否接入数据库、Web、IoT 平台或其他系统尚未确认，不得写成当前事实。
 
@@ -51,17 +51,37 @@
 - 脚本输出 CSV 结果；
 - 当前组合图包含室内与室外温度、冷负荷与系统总功率、冷机 COP。
 
-Gaia 1.0 当前位于个人临时目录。该绝对路径不属于项目长期事实，也不得写入后续代码、配置或测试。开始 Java 转换前，应确定合法、稳定、可追踪的参考输入和基准结果保存方式。
+稳定参考资产位于 `reference/gaia-1.0`，包含原始 Python 源文件、来源与环境说明及中文参考图；冻结的 10,080 行 Python 基准结果位于 `src/main/resources/gaia-baseline/python-results.csv`。项目不依赖原个人临时目录。
 
 Java 转换默认保持 Gaia 1.0 的公式、参数、时间语义、单位和状态更新顺序。发现原模型疑似问题时，先保留对照证据并提出独立变更，不在转换过程中静默修正。
 
-## 5. 预期数据链路
+## 5. 实际架构和数据链路
 
-第一阶段预期形成以下可验证链路：
+第一阶段已经形成以下可验证链路：
 
 `固定仿真参数与时间范围 → 气象序列 → 建筑热过程 → HVAC 系统计算 → 逐时间步结果 → 结构化数据文件 → 温度、负荷、功率和 COP 图表`
 
-这条链路是第一阶段目标，不表示当前已经存在 Java 实现。实际类、接口和文件位置应在实现进入项目基线后补充。
+主要包职责如下：
+
+| 包 | 职责 |
+|---|---|
+| `com.hvac.simulator.app` | CLI 参数解析、对象装配和输出摘要 |
+| `com.hvac.simulator.config` | Gaia 默认参数和仿真时间配置 |
+| `com.hvac.simulator.weather` | Python 基准气象加载和 Java 合成气象生成 |
+| `com.hvac.simulator.model` | 建筑热平衡、冷机、水泵、冷却塔、管道和 FCU 计算 |
+| `com.hvac.simulator.simulation` | 一分钟控制逻辑、状态推进和 17 字段结果 |
+| `com.hvac.simulator.output` | 原子写入 UTF-8 CSV 和中文三联 PNG |
+
+构建、测试和运行命令：
+
+```powershell
+.\mvnw.cmd test
+.\mvnw.cmd package
+java -jar target\hvac-simulator-java.jar --weather=baseline --output=output
+java -jar target\hvac-simulator-java.jar --weather=synthetic --seed=42 --output=output-synthetic
+```
+
+不传参数时默认使用 `baseline`、随机种子 `42` 和 `output` 目录。每次运行生成 `hvac_simulation_results.csv` 和 `simulation_plot.png`；运行输出目录与 Maven `target` 均不进入 Git。
 
 ## 6. 第一阶段交付判断
 
