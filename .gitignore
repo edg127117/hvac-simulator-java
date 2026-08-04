@@ -1,8 +1,9 @@
 # Maven 构建输出
-target/
+/target/
 
 # 仿真运行输出
-output/
+/output/
+/output-synthetic/
 
 # IDE 和本地工具文件
 .idea/
