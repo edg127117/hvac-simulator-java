@@ -12,13 +12,13 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.time.Instant;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
@@ -38,16 +38,14 @@ public final class GaiaChartRenderer {
     private static final int PANEL_HEIGHT = 333;
     private static final Color BLUE = new Color(31, 119, 180);
     private static final Color ORANGE = new Color(255, 127, 14);
-    private static final DateTimeFormatter X_AXIS_FORMAT =
-            DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.systemDefault());
-
     /** 使用同目录临时文件完成三图合成后替换目标，避免中断时留下损坏 PNG。 */
     public void write(SimulationResult result, Path target) throws IOException {
         Objects.requireNonNull(result, "仿真结果不能为空");
         Objects.requireNonNull(target, "PNG 目标路径不能为空");
         Font chineseFont = chooseChineseFont();
-        double[] timestamps = values(result, step -> step.timestamp()
-                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        List<Date> timestamps = result.steps().stream()
+                .map(step -> Date.from(step.timestamp().atZone(ZoneId.systemDefault()).toInstant()))
+                .toList();
 
         XYChart temperature = baseChart("温度 (℃)", "", chineseFont);
         addLine(temperature, "室温", timestamps, values(result, SimulationStep::roomC), BLUE);
@@ -88,22 +86,25 @@ public final class GaiaChartRenderer {
                 .build();
         chart.getStyler().setBaseFont(font);
         chart.getStyler().setChartTitleVisible(false);
+        chart.getStyler().setChartBackgroundColor(Color.WHITE);
+        chart.getStyler().setPlotBackgroundColor(Color.WHITE);
         chart.getStyler().setLegendPosition(LegendPosition.InsideNE);
         chart.getStyler().setSeriesMarkers(new Marker[] {SeriesMarkers.NONE});
         chart.getStyler().setXAxisMaxLabelCount(8);
-        chart.getStyler().setXAxisTickLabelsFormattingFunction(
-                epochMillis -> X_AXIS_FORMAT.format(Instant.ofEpochMilli(epochMillis.longValue())));
+        chart.getStyler().setXAxisTickMarkSpacingHint(130);
+        chart.getStyler().setDatePattern("yyyy-MM-dd");
+        chart.getStyler().setTimezone(TimeZone.getDefault());
         return chart;
     }
 
-    private void addLine(XYChart chart, String label, double[] x, double[] y, Color color) {
+    private void addLine(XYChart chart, String label, List<Date> x, List<Double> y, Color color) {
         XYSeries series = chart.addSeries(label, x, y);
         series.setLineColor(color);
         series.setSmooth(false);
     }
 
-    private double[] values(SimulationResult result, ToDoubleFunction<SimulationStep> extractor) {
-        return result.steps().stream().mapToDouble(extractor).toArray();
+    private List<Double> values(SimulationResult result, ToDoubleFunction<SimulationStep> extractor) {
+        return result.steps().stream().map(extractor::applyAsDouble).toList();
     }
 
     /** 必须确认字体实际覆盖中文，禁止静默回退成方框。 */
