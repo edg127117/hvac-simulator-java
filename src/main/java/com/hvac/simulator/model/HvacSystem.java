@@ -19,6 +19,10 @@ public final class HvacSystem {
         this.parameters = Objects.requireNonNull(parameters, "HVAC 参数不能为空");
     }
 
+    public HvacParameters parameters() {
+        return parameters;
+    }
+
     /**
      * 冷机 COP 同时按冷却水温和 PLR 修正；PLR 强制处于 0.1~1.0。
      * dtSeconds 为忠实保留的 Gaia 入参，原公式未使用它。
