@@ -28,17 +28,18 @@
 
 第一阶段还应提供可复现的结构化仿真结果，便于核对图表数据和 Python、Java 数值差异。
 
-以下事项尚未确认，不得写成当前事实：
+第一阶段技术设计已经确认：
 
-- Java 版本、构建工具及具体依赖版本；
-- 图表库、CSV 库和命令行框架；
-- Java 包结构和类职责；
-- 默认仿真周期是否继续采用 Gaia 1.0 的一周演示范围；
-- Python 与 Java 的具体数值容差；
-- 图表采用一张组合图还是四张独立图；
-- 后续是否接入数据库、Web、IoT 平台或其他系统。
+- 使用 Java 21、Maven Wrapper 和普通 Java CLI，不引入 Spring Boot；
+- 使用 XChart 生成一张包含三个纵向子图的中文 PNG；
+- 默认复现 2024 年 7 月 1 日至 7 月 7 日的 1 分钟基准；
+- 同时提供 Python 基准气象模式和 Java 合成气象模式；
+- 基准模式按全部时间步和字段进行数值对照；
+- 详细架构、依赖、误差和测试设计查看 [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md)。
 
-这些内容必须在 Java 转换设计中确认后再进入稳定项目地图。
+上述内容是已确认目标，不表示当前已经完成实现。当前完成状态以 `PROJECT_STATUS.md`、代码和自动化测试为准。
+
+后续是否接入数据库、Web、IoT 平台或其他系统尚未确认，不得写成当前事实。
 
 ## 4. Gaia 1.0 参考基线
 
@@ -82,6 +83,7 @@ Java 转换默认保持 Gaia 1.0 的公式、参数、时间语义、单位和�
 | [`AGENTS.md`](AGENTS.md) | 长期固定的 Git、测试、注释和文档管理规则 | 固定工作规则变化时 |
 | [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) | 稳定项目地图、目标边界、数据链路和运行入口 | 稳定项目事实变化时 |
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 当前完成项、未完成项、风险和下一步 | 当前版本状态变化时 |
+| [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | 第一阶段架构、忠实兼容边界、误差和验收标准 | 第一阶段设计决策变化时 |
 | `docs/superpowers/specs` | 经确认的任务设计和取舍 | 新功能或核心行为设计确认后 |
 | `docs/superpowers/plans` | 任务实施步骤和验证方案 | 设计确认并进入实施前 |
 
