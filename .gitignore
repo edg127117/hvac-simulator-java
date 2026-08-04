@@ -3,6 +3,7 @@ target/
 
 # 仿真运行输出
 output/
+output-synthetic/
 
 # IDE 和本地工具文件
 .idea/
