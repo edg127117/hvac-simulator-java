@@ -85,19 +85,51 @@ MySQL + TDengine + MQTT Broker
 
 ### 3.2 仓库模块
 
-计划将代码组织为：
+计划采用同一仓库中的 `engine/server/web` 结构。`engine` 和 `server` 是 Maven 模块，`web` 是独立的 Vue 3 npm 工程：
 
 ```text
 hvac-simulator-java
-├─ hvac-simulator-engine
-│  └─ 纯 Java 仿真引擎
-├─ hvac-simulator-server
-│  └─ Spring Boot、任务、数据库、权限和协议适配
-└─ hvac-simulator-web
-   └─ Vue 3 前端
+├─ pom.xml                         Maven父工程
+│
+├─ engine                          纯Java仿真引擎
+│  ├─ pom.xml
+│  └─ src
+│     ├─ main/java
+│     │  └─ com/hvac/simulator
+│     │     ├─ config
+│     │     ├─ weather
+│     │     ├─ model
+│     │     └─ simulation
+│     ├─ main/resources
+│     └─ test/java
+│
+├─ server                          Spring Boot后端
+│  ├─ pom.xml
+│  └─ src
+│     ├─ main/java
+│     │  └─ com/hvac/simulator
+│     │     ├─ interfaces
+│     │     │  └─ rest             Controller、请求和响应
+│     │     ├─ application         应用服务和用例编排
+│     │     ├─ domain              任务、模型和发送规则
+│     │     └─ infrastructure      MySQL、TDengine和MQTT实现
+│     ├─ main/resources
+│     │  ├─ application.yml
+│     │  └─ db/migration
+│     └─ test/java
+│
+└─ web                             Vue 3前端
+   ├─ package.json
+   ├─ vite.config.ts
+   ├─ index.html
+   ├─ public
+   └─ src
+      ├─ app
+      ├─ features
+      └─ shared
 ```
 
-第一阶段只部署一个 Spring Boot 后端。`engine` 不依赖 Spring、数据库、Web 或 MQTT；`server` 依赖 `engine`，负责平台编排。现有仿真公式、基准资产和一致性测试迁入 `engine` 时必须保持行为不变。
+根 `pom.xml` 聚合 `engine` 和 `server`；`web` 使用 npm 独立安装、测试和构建。第一阶段只部署一个 Spring Boot 后端。`engine` 不依赖 Spring、数据库、Web 或 MQTT；`server` 依赖 `engine`，负责平台编排。现有仿真公式、基准资产和一致性测试迁入 `engine` 时必须保持行为不变。
 
 ### 3.3 后端内部边界
 
@@ -331,6 +363,8 @@ TDengine 保存逐时间点结果。第一阶段采用“核心宽表 + 扩展�
 
 ## 8. 前端信息架构
 
+### 8.1 页面结构
+
 ```text
 登录
 仿真任务
@@ -351,6 +385,66 @@ TDengine 保存逐时间点结果。第一阶段采用“核心宽表 + 扩展�
 ```
 
 “参数配置与运行”和“结果与发送”是同一个仿真任务功能中的两个流程页面，不拆成两个平台或两个独立一级业务模块。
+
+### 8.2 前端内部结构
+
+前端按业务能力组织，能力内部再分层。以下目录位于仓库根目录的 `web/src`，不是 Java `src/main/java`：
+
+```text
+web/src
+├─ app                              应用入口
+│  ├─ router                        路由
+│  ├─ layout                        整体布局
+│  └─ permission                    登录和路由权限
+│
+├─ features                         业务能力
+│  ├─ simulation-task               仿真任务
+│  │  ├─ pages                      页面视觉层
+│  │  ├─ components                 业务展示组件
+│  │  ├─ state                      页面状态层
+│  │  ├─ application                前端业务能力层
+│  │  ├─ model                      前端业务模型
+│  │  ├─ ports                      前端接口契约
+│  │  └─ infrastructure             HTTP接口实现和DTO转换
+│  ├─ model-version                 模型版本
+│  ├─ simulation-result             结果和图表
+│  ├─ data-delivery                 数据发送
+│  └─ user-management               用户管理
+│
+└─ shared                           全局共享能力
+   ├─ ui                            基础按钮、表格和弹窗
+   ├─ chart                         通用图表封装
+   ├─ api                           HTTP基础客户端
+   ├─ validation                    通用校验
+   ├─ types                         通用类型
+   └─ styles                        主题、颜色、间距和字体
+```
+
+前端调用链为：
+
+```text
+页面视觉层
+→ 页面状态层
+→ 业务能力层
+→ 接口契约层
+→ HTTP数据访问适配层
+→ server/interfaces/rest
+→ 后端应用服务层
+```
+
+各层职责如下：
+
+| 层次 | 职责 | 禁止事项 |
+|---|---|---|
+| 页面视觉层 | 页面布局、表单、表格、图表、按钮和弹窗 | 不直接调用 HTTP，不实现任务规则 |
+| 页面状态层 | 加载、筛选、分页、页签、表单草稿和当前选择 | 不实现仿真公式或拼接后端 DTO |
+| 业务能力层 | 创建、复制和取消任务，参数锁定，结果汇总，发送控制 | 不依赖具体页面组件和视觉样式 |
+| 接口契约层 | 使用 TypeScript 接口定义业务所需的外部能力 | 不包含 Axios、URL 和传输 DTO 细节 |
+| 数据访问适配层 | 调用 Spring Boot REST API，转换请求、响应和下载结果 | 不控制页面状态和业务流程 |
+
+重要外部边界通过 `ports` 定义，例如仿真任务使用 `SimulationTaskGateway`；正式环境由 HTTP 适配器实现，前端测试或演示可以使用 Mock 实现。不是每个简单函数都抽象接口，避免形成只转发调用的机械层次。
+
+页面和 Pinia Store 不能直接调用 Axios。HTTP DTO 进入业务层前必须转换为前端业务模型；图表组件只接收已整理的数据序列，不负责查询接口。颜色、字体、间距和主题集中在 `shared/styles`，通用视觉组件集中在 `shared/ui`，从而使视觉改版主要影响页面、组件和共享样式，而不改变任务、参数和发送规则。
 
 ## 9. 结果查询、图表和导出
 
