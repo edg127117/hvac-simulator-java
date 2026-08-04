@@ -1,6 +1,6 @@
 # Gaia 1.0 Java 忠实转换 Implementation Plan
 
-> 状态：已实施，功能分支发布与合并状态以 `PROJECT_STATUS.md` 和当前 Git 为准。
+> 状态：已实施、功能分支已发布，合并状态以 `PROJECT_STATUS.md` 和当前 Git 为准。
 
 > 实施说明：功能、测试和运行验证均已完成；计划中要求单独保存“先失败”日志的步骤未保留独立证据，因此对应复选框保持未勾选。
 
@@ -588,7 +588,7 @@ git diff --cached --check
 git commit -m "docs(simulator): record Java port delivery"
 ```
 
-- [ ] **Step 6: 推送任务分支并准备 PR**
+- [x] **Step 6: 推送任务分支并准备 PR**
 
 ```powershell
 git push -u origin feature/gaia-java-port

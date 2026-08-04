@@ -8,7 +8,7 @@
 
 ## 2. 当前阶段
 
-项目处于 Gaia 1.0 Java 忠实转换已实现、功能分支待合并和领导视觉确认阶段。
+项目处于 Gaia 1.0 Java 忠实转换已实现、功能分支已发布、待 PR 合并和领导视觉确认阶段。
 
 当前第一阶段目标已经确认：把 Gaia 1.0 转换为 Java，并生成温度、负荷、功率和 COP 图表供领导确认。
 
@@ -40,7 +40,7 @@ Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三�
 
 - GitHub `main` 分支保护尚未配置或现场验证。
 - 尚未执行性能测试、物理合理性验收或领导视觉确认。
-- 当前功能分支尚待推送、建立 PR 并由用户合并到 `main`。
+- 当前功能分支已推送，尚待建立 PR 并由用户合并到 `main`。
 
 ## 5. 当前阻塞与风险
 
@@ -51,7 +51,7 @@ Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三�
 
 ## 6. 下一步优先级
 
-1. 推送 `feature/gaia-java-port`，建立 PR 并由用户合并到 `main`。
+1. 为 `feature/gaia-java-port` 建立 PR 并由用户合并到 `main`。
 2. 提交当前 Java 三联图供领导进行视觉和业务确认。
 3. 如需修正物理模型或连续控制策略，另行设计并与忠实基准模式隔离。
 4. 按后续明确范围执行性能、物理合理性和长期运行验收。
@@ -64,7 +64,7 @@ Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三�
 | [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) | 当前有效 | 只记录已确认目标和从 Gaia 1.0 核对出的稳定参考信息 |
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 当前有效、持续更新 | 记录本地 Git 起点、未完成项、风险和下一步 |
 | [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | 已确认、已实施 | 记录第一阶段架构、忠实兼容边界、误差和验收标准 |
-| [`Gaia 1.0 Java 忠实转换实施计划`](docs/superpowers/plans/2026-08-04-gaia-java-port.md) | 已实施、待发布分支 | 记录文件、接口、测试和提交步骤 |
+| [`Gaia 1.0 Java 忠实转换实施计划`](docs/superpowers/plans/2026-08-04-gaia-java-port.md) | 已实施、分支已发布 | 记录文件、接口、测试和提交步骤 |
 
 ## 8. 更新规则
 
