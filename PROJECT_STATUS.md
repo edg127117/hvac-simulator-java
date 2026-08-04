@@ -8,11 +8,11 @@
 
 ## 2. 当前阶段
 
-项目处于 Gaia 1.0 Java 忠实转换已实现、功能分支已发布、待 PR 合并和领导视觉确认阶段。
+项目处于 Gaia 1.0 Java 忠实转换已合并、领导视觉确认待完成、独立正式仿真平台设计已确认且尚未实施的阶段。
 
-当前第一阶段目标已经确认：把 Gaia 1.0 转换为 Java，并生成温度、负荷、功率和 COP 图表供领导确认。
+Gaia 1.0 Java 转换阶段目标已经确认：把 Gaia 1.0 转换为 Java，并生成温度、负荷、功率和 COP 图表供领导确认。
 
-Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三联图均已在当前功能分支完成。
+Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三联图均已进入 `main`。Spring Boot、Vue、MySQL、TDengine、权限、任务管理和 MQTT 发送仍是待实施内容。
 
 ## 3. 当前已核验
 
@@ -26,6 +26,8 @@ Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三�
 - 已确认 Gaia 1.0 Java 忠实转换的架构、双气象模式、数值容差、异常处理、测试和交付范围。
 - 已形成 [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md)。
 - 已形成 [`Gaia 1.0 Java 忠实转换实施计划`](docs/superpowers/plans/2026-08-04-gaia-java-port.md)。
+- 已确认独立正式仿真平台的模块化单体、模型版本、动态参数、任务、数据库、可视化、权限和 MQTT 发送边界。
+- 已形成 [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md)，当前状态为待实施。
 - 已建立 Java 21、Maven Wrapper 3.3.4 和 Maven 3.9.16 工程，完整测试与打包通过。
 - Gaia 原始源文件、来源说明、中文参考图和 10,080 行 Python 基准结果已纳入稳定参考目录。
 - 已实现基准气象与固定种子的 Java 合成气象两种模式，程序运行不依赖 Python。
@@ -34,13 +36,15 @@ Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三�
 - 可执行 JAR 的基准和合成模式均已实际运行，分别生成 17 字段 CSV 和 1200×999 中文三联 PNG。
 - Java 图与 Python 参考图已人工核对三联布局、五条序列、颜色、时间范围和尖峰位置，语义一致且中文正常显示。
 
-上述实现当前位于 `feature/gaia-java-port` 功能分支；是否已进入 `main` 以当前 Git 和远程仓库为准。
+上述 Gaia 1.0 Java 实现已经通过 PR 合并进入 `main`。
 
 ## 4. 尚未完成
 
 - GitHub `main` 分支保护尚未配置或现场验证。
 - 尚未执行性能测试、物理合理性验收或领导视觉确认。
-- 当前功能分支已推送，尚待建立 PR 并由用户合并到 `main`。
+- 独立正式仿真平台尚未编写实施计划，也尚未开始编码。
+- Spring Boot、Vue、MySQL、TDengine、用户权限、后台任务、Web 图表和 MQTT 发送均未实现或验证。
+- `iot-platform-demo` 的仿真数据接收端属于后续独立任务，当前仓库未实现端到端接收和入库。
 
 ## 5. 当前阻塞与风险
 
@@ -51,10 +55,11 @@ Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三�
 
 ## 6. 下一步优先级
 
-1. 为 `feature/gaia-java-port` 建立 PR 并由用户合并到 `main`。
-2. 提交当前 Java 三联图供领导进行视觉和业务确认。
-3. 如需修正物理模型或连续控制策略，另行设计并与忠实基准模式隔离。
-4. 按后续明确范围执行性能、物理合理性和长期运行验收。
+1. 由用户复核 [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md)。
+2. 设计复核通过后形成分阶段实施计划，再进入平台编码。
+3. 提交当前 Java 三联图供领导进行视觉和业务确认。
+4. 如需修正物理模型或连续控制策略，另行设计并与忠实基准模式隔离。
+5. 按后续明确范围执行性能、物理合理性和长期运行验收。
 
 ## 7. 文档健康
 
@@ -63,8 +68,9 @@ Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三�
 | [`AGENTS.md`](AGENTS.md) | 当前有效 | 只包含通用 Git、测试、注释和文档管理规则，以及数值仿真必要适配 |
 | [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) | 当前有效 | 只记录已确认目标和从 Gaia 1.0 核对出的稳定参考信息 |
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 当前有效、持续更新 | 记录本地 Git 起点、未完成项、风险和下一步 |
-| [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | 已确认、已实施 | 记录第一阶段架构、忠实兼容边界、误差和验收标准 |
-| [`Gaia 1.0 Java 忠实转换实施计划`](docs/superpowers/plans/2026-08-04-gaia-java-port.md) | 已实施、分支已发布 | 记录文件、接口、测试和提交步骤 |
+| [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | 已确认、已实施、已合并 | 记录第一阶段架构、忠实兼容边界、误差和验收标准 |
+| [`Gaia 1.0 Java 忠实转换实施计划`](docs/superpowers/plans/2026-08-04-gaia-java-port.md) | 已实施、已合并 | 记录文件、接口、测试和提交步骤 |
+| [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) | 已确认、待实施 | 记录正式平台边界、架构、数据、页面、发送和验收设计 |
 
 ## 8. 更新规则
 

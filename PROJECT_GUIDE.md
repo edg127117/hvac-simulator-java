@@ -13,22 +13,22 @@
 
 ## 2. 项目定位
 
-本项目用于把 Gaia 1.0 中的办公建筑中央空调逐时间步仿真转换为 Java 实现，并形成可重复运行、可测试、可导出的仿真程序。
+本项目以 Gaia 1.0 办公建筑中央空调逐时间步模型为起点，先形成可重复运行、可测试、可导出的纯 Java 仿真引擎，再演进为独立的正式 HVAC 仿真平台。Gaia 1.0 是首个模型版本，后续 Python 模型通过基准冻结、Java 转换、一致性测试和版本发布进入平台。
 
-当前只确认第一阶段目标，不提前定义尚未确认的长期产品范围、平台集成方式或系统架构。
+正式平台保持独立部署，先将仿真任务、参数和结果保存到自己的 MySQL 与 TDengine，再通过可扩展协议适配器向外部空调平台发送。该目标已经形成设计，但 Spring Boot、Vue、数据库、权限和 MQTT 功能尚未实现，不能写成当前能力。
 
-## 3. 第一阶段边界
+## 3. Gaia 1.0 Java 转换阶段边界
 
-第一阶段目标是完成 Java 转换并生成以下图表，供领导确认模型行为和展示结果：
+Gaia 1.0 Java 转换阶段的目标是完成 Java 转换并生成以下图表，供领导确认模型行为和展示结果：
 
 - 温度：至少包含室内温度和室外温度；
 - 负荷：至少包含冷负荷；
 - 功率：至少包含系统总功率，必要时可补充主要设备功率；
 - COP：至少包含冷机 COP。
 
-第一阶段还应提供可复现的结构化仿真结果，便于核对图表数据和 Python、Java 数值差异。
+该阶段还应提供可复现的结构化仿真结果，便于核对图表数据和 Python、Java 数值差异。
 
-第一阶段技术设计已经确认：
+该阶段技术设计已经确认：
 
 - 使用 Java 21、Maven Wrapper 和普通 Java CLI，不引入 Spring Boot；
 - 使用 XChart 生成一张包含三个纵向子图的中文 PNG；
@@ -39,7 +39,7 @@
 
 上述技术方案已经在当前 Java 工程中实现。当前合并状态和仍需人工确认的事项以 `PROJECT_STATUS.md` 为准。
 
-后续是否接入数据库、Web、IoT 平台或其他系统尚未确认，不得写成当前事实。
+正式平台的模块化单体、数据库、Web、任务、可视化、权限和 MQTT 发送边界已经确认，详细设计查看 [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md)。这些内容当前属于待实施目标；现有可运行实现仍是普通 Java CLI。
 
 ## 4. Gaia 1.0 参考基线
 
@@ -104,6 +104,7 @@ java -jar target\hvac-simulator-java.jar --weather=synthetic --seed=42 --output=
 | [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) | 稳定项目地图、目标边界、数据链路和运行入口 | 稳定项目事实变化时 |
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 当前完成项、未完成项、风险和下一步 | 当前版本状态变化时 |
 | [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | 第一阶段架构、忠实兼容边界、误差和验收标准 | 第一阶段设计决策变化时 |
+| [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) | 正式平台的边界、架构、数据、页面、发送和验收设计 | 正式平台设计决策变化时 |
 | `docs/superpowers/specs` | 经确认的任务设计和取舍 | 新功能或核心行为设计确认后 |
 | `docs/superpowers/plans` | 任务实施步骤和验证方案 | 设计确认并进入实施前 |
 
