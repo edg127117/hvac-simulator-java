@@ -2,12 +2,11 @@
 
 ## 1. 使用方式
 
-处理本项目任务时按以下顺序读取信息：
+每个任务先读取 [`AGENTS.md`](AGENTS.md)，再按任务需要选择信息入口：
 
-1. 读取 [`AGENTS.md`](AGENTS.md)，确认核心规则和当前任务必须继续读取的开发规范。
-2. 读取本文件，确认项目定位、第一阶段边界、参考基线和交付目标。
-3. 读取 [`PROJECT_STATUS.md`](PROJECT_STATUS.md)，确认当前 Git 版本已经完成、尚未完成和需要核验的事项。
-4. 只在任务需要时读取相关设计、实施计划、代码和测试。
+- 涉及项目定位、模型版本、参考基线、稳定架构、运行入口或输出契约时读取本文件；
+- 涉及当前实现、未完成项、风险、技术债或下一步时读取 [`PROJECT_STATUS.md`](PROJECT_STATUS.md)；
+- 只读取与任务直接相关的设计、实施计划、代码、测试和参考资产。
 
 本文件是稳定项目地图，不记录单次命令、临时排查过程、本机运行状态和短期任务进度。
 
@@ -105,8 +104,9 @@ java -jar target\hvac-simulator-java.jar --weather=synthetic --seed=42 --output=
 | [`AGENTS.md`](AGENTS.md) | 核心工作规则和按任务读取的规范路由 | 固定规则或路由变化时 |
 | [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) | 稳定项目地图、目标边界、数据链路和运行入口 | 稳定项目事实变化时 |
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 当前完成项、未完成项、风险和下一步 | 当前版本状态变化时 |
-| [`仿真基准与结果验证规范`](docs/development/simulation-verification.md) | 基准冻结、逐时间步对照、容差、边界、产物和图表验收 | 仿真验证规则变化时 |
-| [`HVAC 仿真代码中文注释规范`](docs/development/code-comments.md) | 公式、单位、状态推进和模型兼容注释要求 | Java 仿真注释规则变化时 |
+| [`.agents/skills/hvac-simulation-verification/SKILL.md`](.agents/skills/hvac-simulation-verification/SKILL.md) | Codex 执行模型、基准、产物和图表验证的完整矩阵 | 可执行仿真验证流程变化时 |
+| [`仿真验证说明`](docs/development/simulation-verification.md) | 面向开发者的忠实转换、逐项对照、容差和证据边界 | 仿真验证原则变化时 |
+| [`HVAC 仿真代码注释专项规则`](docs/development/code-comments.md) | 公式、单位、状态推进、随机顺序和模型兼容注释要求 | Java 仿真专项注释规则变化时 |
 | [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | 第一阶段架构、忠实兼容边界、误差和验收标准 | 第一阶段设计决策变化时 |
 | [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) | 正式平台的边界、架构、数据、页面、发送和验收设计 | 正式平台设计决策变化时 |
 | [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md) | Gaia 1.1 的版本差异、测量层、指标语义、基准和验收设计 | Gaia 1.1 接入决策变化时 |
