@@ -137,6 +137,8 @@ com.hvac.simulator.device.runtime
 
 质量状态描述整个端口快照。本子项目不扩展为逐字段测点质量模型。
 
+公共单设备执行器只校验质量状态存在，不统一拒绝 `UNCERTAIN`、`BAD` 或 `NOT_AVAILABLE`。不同设备是否可以继续计算、使用备用值、降低输出质量或返回错误，由具体设备运行时根据自身公式决定；公共层不能替所有设备制定同一降级策略。
+
 ## 6. 端口运行值
 
 ### 6.1 端口运行值规格
@@ -313,6 +315,7 @@ com.hvac.simulator.device.runtime
 | 稳定编码 | 固定中文名称 |
 |---|---|
 | `MISSING_INPUT` | 缺少输入 |
+| `INCOMPATIBLE_VALUE_TYPE` | 端口值类型不兼容 |
 | `INCOMPATIBLE_UNIT` | 单位不兼容 |
 | `INCOMPATIBLE_MEDIUM` | 介质不兼容 |
 | `NON_FINITE_VALUE` | 数值不是有限值 |
@@ -423,7 +426,8 @@ stateSchemaVersion
 ### 13.3 单步计算测试
 
 - 支持与不支持的计算步长；
-- 缺失输入、错误单位和错误介质的稳定中文错误；
+- 缺失输入、错误端口值类型、错误单位和错误介质的稳定中文错误；
+- 公共执行器不因 `UNCERTAIN`、`BAD` 或 `NOT_AVAILABLE` 自动拒绝输入；
 - 设备运行时返回非有限、除零和越界错误；
 - 成功结果包含输出、指标和下一状态；
 - 无状态设备不使用 `null`；
