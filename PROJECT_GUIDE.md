@@ -14,7 +14,7 @@
 
 本项目以 Gaia 1.0 办公建筑中央空调逐时间步模型为起点，先形成可重复运行、可测试、可导出的纯 Java 仿真引擎，再演进为独立的通用自由拓扑仿真平台。平台允许用户通过独立设备模块和公共水、电、控制信号端口自由搭建综合能源系统；中央空调设备是第一批正式模块，后续再扩展其他能源设备。Gaia 1.0 是首个已实现模型版本；Gaia 1.1 是下一个已确认接入设计、尚未转换和验证的模型版本。后续 Python 模型通过基准冻结、Java 转换、一致性测试和版本发布进入平台。
 
-正式平台保持独立部署，先将仿真任务、参数和结果保存到自己的 MySQL、TDengine 与文件存储，再通过可扩展协议适配器向外部平台发送。第一阶段为中央空调经济性调试提供设备和数据能力，但平台、内部消息和模型接口不与单一外部平台绑定。当前只完成纯 Java 的公共能源、设备静态契约、端口、拓扑图和基础结构校验；Spring Boot、Vue、数据库、可执行自由拓扑、权限和 MQTT 功能尚未实现，不能写成当前能力。
+正式平台保持独立部署，先将仿真任务、参数和结果保存到自己的 MySQL、TDengine 与文件存储，再通过可扩展协议适配器向外部平台发送。第一阶段为中央空调经济性调试提供设备和数据能力，但平台、内部消息和模型接口不与单一外部平台绑定。当前纯 Java 引擎已具备公共能源、设备静态契约、强类型运行值、参数快照、单步设备计算契约、公共单设备校验、拓扑图和基础结构校验；尚无具体设备运行时和拓扑执行能力。Spring Boot、Vue、数据库、可执行自由拓扑、权限和 MQTT 功能也尚未实现，不能写成当前能力。
 
 ## 3. Gaia 1.0 Java 转换阶段边界
 
@@ -38,7 +38,7 @@ Gaia 1.0 Java 转换阶段的目标是完成 Java 转换并生成以下图表，
 
 上述技术方案已经在当前 Java 工程中实现。当前合并状态和仍需人工确认的事项以 `PROJECT_STATUS.md` 为准。
 
-正式平台已经从固定 HVAC 任务结构调整为通用自由拓扑目标。模块化单体、独立设备、公共能源端口、拓扑求解、五层时间、数据库、Web 工作台、权限和 MQTT 发送边界查看 [`通用自由拓扑仿真平台设计`](docs/superpowers/specs/2026-08-10-free-topology-simulation-platform-design.md)。平台已开始分阶段实施，当前只完成通用设备与拓扑引擎基础；现有可运行仿真仍是固定 Gaia 1.0 普通 Java CLI。此前的 [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) 保留为历史设计，不再代表最终平台边界。
+正式平台已经从固定 HVAC 任务结构调整为通用自由拓扑目标。模块化单体、独立设备、公共能源端口、拓扑求解、五层时间、数据库、Web 工作台、权限和 MQTT 发送边界查看 [`通用自由拓扑仿真平台设计`](docs/superpowers/specs/2026-08-10-free-topology-simulation-platform-design.md)。平台已分阶段完成通用设备与拓扑静态基础，以及设备运行时契约与公共能量数据模型；现有可运行仿真仍是固定 Gaia 1.0 普通 Java CLI。此前的 [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) 保留为历史设计，不再代表最终平台边界。
 
 Gaia 1.1 增加模拟传感器、功率表、测量制冷量和测量 COP，并改变部分同名输出字段的业务语义。接入方案采用物理仿真、测量模型和测量派生三段式边界，详细设计查看 [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md)。当前只完成设计，尚未形成 Gaia 1.1 稳定基准或 Java 实现。
 
@@ -66,6 +66,10 @@ Java 转换默认保持 Gaia 1.0 的公式、参数、时间语义、单位和�
 
 `公共能源与端口 → 版本化设备静态契约 → 拓扑节点与连线 → 候选连线校验 → 启动前基础结构校验`
 
+设备运行时公共层形成以下可验证单设备链路，但尚无具体设备运行时实现：
+
+`设备静态定义 → 强类型端口值与完整参数快照 → 时间和上一步状态 → 单设备边界校验与调用 → 端口输出、指标、下一状态或稳定错误`
+
 主要包职责如下：
 
 | 包 | 职责 |
@@ -77,7 +81,10 @@ Java 转换默认保持 Gaia 1.0 的公式、参数、时间语义、单位和�
 | `com.hvac.simulator.simulation` | 一分钟控制逻辑、状态推进和 17 字段结果 |
 | `com.hvac.simulator.output` | 原子写入 UTF-8 CSV 和中文三联 PNG |
 | `com.hvac.simulator.energy` | 公共电、水和控制信号能源类型，不包含具体设备公式 |
+| `com.hvac.simulator.energy.runtime` | 规范单位及不可变电、水和控制信号运行值，不执行单位换算 |
 | `com.hvac.simulator.device` | 版本化独立设备静态契约、端口、时间步能力和只读设备目录 |
+| `com.hvac.simulator.device.parameter` | 参数定义、使用方式、范围和版本化完整值快照 |
+| `com.hvac.simulator.device.runtime` | 泛型设备状态、单步输入输出、指标、稳定错误和单设备公共校验，不包含具体公式或拓扑求解 |
 | `com.hvac.simulator.topology` | 不可变节点、端口连接图和基础结构校验，不包含完整水力或守恒求解 |
 
 构建、测试和运行命令：
@@ -117,6 +124,7 @@ java -jar target\hvac-simulator-java.jar --weather=synthetic --seed=42 --output=
 | [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | 第一阶段架构、忠实兼容边界、误差和验收标准 | 第一阶段设计决策变化时 |
 | [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) | 早期固定 HVAC 平台设计，作为历史演进记录保留 | 不再更新，当前平台目标查看自由拓扑设计 |
 | [`通用自由拓扑仿真平台设计`](docs/superpowers/specs/2026-08-10-free-topology-simulation-platform-design.md) | 自由组合设备、公共能源端口、拓扑求解、时间、数据、工作台和协议的当前正式平台设计 | 自由拓扑正式平台设计决策变化时 |
+| [`设备运行时契约与公共能量数据模型设计`](docs/superpowers/specs/2026-08-10-device-runtime-contract-and-shared-energy-data-model-design.md) | 强类型运行值、参数、状态、单步结果、错误和公共执行边界 | 设备公共运行时契约变化时 |
 | [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md) | Gaia 1.1 的版本差异、测量层、指标语义、基准和验收设计 | Gaia 1.1 接入决策变化时 |
 | `docs/superpowers/specs` | 经确认的任务设计和取舍 | 新功能或核心行为设计确认后 |
 | `docs/superpowers/plans` | 任务实施步骤和验证方案 | 设计确认并进入实施前 |

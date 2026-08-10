@@ -11,6 +11,7 @@ import com.hvac.simulator.device.TimeStepCapability;
 import com.hvac.simulator.device.port.PortCardinality;
 import com.hvac.simulator.device.port.PortDefinition;
 import com.hvac.simulator.device.port.PortDirection;
+import com.hvac.simulator.device.port.StartStopSignalSpec;
 import com.hvac.simulator.device.port.WaterSide;
 import com.hvac.simulator.energy.EnergyType;
 import com.hvac.simulator.topology.TopologyConnection;
@@ -180,7 +181,8 @@ class TopologyValidatorTest {
                         EnergyType.CONTROL_SIGNAL,
                         PortDirection.INPUT,
                         WaterSide.NOT_APPLICABLE,
-                        PortCardinality.OPTIONAL_SINGLE)));
+                        PortCardinality.OPTIONAL_SINGLE,
+                        StartStopSignalSpec.INSTANCE)));
         return new TopologyValidator(InMemoryDeviceCatalog.fromModules(modules));
     }
 
