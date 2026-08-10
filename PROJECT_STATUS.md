@@ -12,7 +12,7 @@
 
 Gaia 1.0 Java 转换阶段目标已经确认：把 Gaia 1.0 转换为 Java，并生成温度、负荷、功率和 COP 图表供领导确认。
 
-Gaia 1.0 Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三联图均已进入 `main`。当前任务分支新增公共能源、设备静态契约、端口、拓扑图和基础结构校验；Spring Boot、Vue、MySQL、TDengine、可执行自由拓扑、权限、任务管理和 MQTT 发送仍是待实施内容。
+Gaia 1.0 Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和中文三联图均已进入 `main`。公共能源、设备静态契约、端口、拓扑图和基础结构校验也已通过 PR 合并进入 `main`；Spring Boot、Vue、MySQL、TDengine、可执行自由拓扑、权限、任务管理和 MQTT 发送仍是待实施内容。
 
 ## 3. 当前已核验
 
@@ -49,7 +49,7 @@ Gaia 1.0 Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和�
 
 上述 Gaia 1.0 Java 实现已经通过 PR 合并进入 `main`。
 
-上述通用设备与拓扑引擎基础当前位于任务分支，尚未合并进入 `main`。
+上述通用设备与拓扑引擎基础已经通过 PR 合并进入 `main`。
 
 ## 4. 尚未完成
 
@@ -94,7 +94,7 @@ Gaia 1.0 Java 工程、算法转换、自动化测试、可执行 JAR、CSV 和�
 | [`Gaia 1.0 Java 忠实转换实施计划`](docs/superpowers/plans/2026-08-04-gaia-java-port.md) | 已实施、已合并 | 记录文件、接口、测试和提交步骤 |
 | [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) | 历史设计 | 记录从固定 HVAC 任务平台向自由拓扑平台演进前的早期方案 |
 | [`通用自由拓扑仿真平台设计`](docs/superpowers/specs/2026-08-10-free-topology-simulation-platform-design.md) | 已确认、分阶段实施中 | 覆盖原固定平台目标，记录独立设备、自由拓扑、公共能源、时间、数据、工作台和协议的当前正式设计 |
-| [`通用设备与拓扑引擎基础实施计划`](docs/superpowers/plans/2026-08-10-generic-device-topology-engine-foundation.md) | 已实施、待合并 | 记录公共能源、设备静态契约、端口、拓扑图和基础结构校验的 TDD 与交付步骤 |
+| [`通用设备与拓扑引擎基础实施计划`](docs/superpowers/plans/2026-08-10-generic-device-topology-engine-foundation.md) | 已实施、已合并 | 记录公共能源、设备静态契约、端口、拓扑图和基础结构校验的 TDD 与交付步骤 |
 | [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md) | 已确认、待实施；原始运行待验证 | 记录版本差异、测量层、指标语义、基准冻结和验收边界 |
 
 ## 8. 更新规则
