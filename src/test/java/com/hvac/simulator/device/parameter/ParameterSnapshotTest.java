@@ -60,6 +60,17 @@ class ParameterSnapshotTest {
                         "rated-power", new DecimalParameterValue(90.0, UnitCode.KILOWATT))));
     }
 
+    @Test
+    void snapshotsWithSameResolvedValuesHaveValueSemantics() {
+        var definition = deviceDefinition(List.of(configurable(), fixed(), unused()));
+
+        var first = ParameterSnapshot.fromDefaults(definition);
+        var second = ParameterSnapshot.fromDefaults(definition);
+
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
+    }
+
     private static DeviceDefinition deviceDefinition(List<ParameterDefinition> parameters) {
         return new DeviceDefinition(
                 new DeviceModuleKey("TEST_DEVICE", "1.0"),

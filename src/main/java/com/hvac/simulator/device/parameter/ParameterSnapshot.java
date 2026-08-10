@@ -81,6 +81,27 @@ public final class ParameterSnapshot {
         return value;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof ParameterSnapshot that)) {
+            return false;
+        }
+        return moduleKey.equals(that.moduleKey) && values.equals(that.values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(moduleKey, values);
+    }
+
+    @Override
+    public String toString() {
+        return "ParameterSnapshot[moduleKey=" + moduleKey + ", values=" + values + "]";
+    }
+
     private static void validateEntries(Map<String, ParameterValue> values, String nullMessage) {
         Objects.requireNonNull(values, nullMessage);
         for (var entry : values.entrySet()) {
