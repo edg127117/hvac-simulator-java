@@ -1,6 +1,6 @@
 # 设备运行时契约与公共能量数据模型 Implementation Plan
 
-> 状态：待用户确认，未实施。
+> 状态：已确认、已实施并完成本地自动化验证；交付状态以 Git 和 PR 为准。
 >
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

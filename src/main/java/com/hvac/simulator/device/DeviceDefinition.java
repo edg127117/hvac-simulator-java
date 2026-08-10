@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** 独立设备模块的静态公开契约；公式、状态和运行时值由后续执行契约承载。 */
+/** 独立设备模块的静态公开契约；具体公式和状态由对应运行时实现承载。 */
 public record DeviceDefinition(
         DeviceModuleKey key,
         String displayName,
