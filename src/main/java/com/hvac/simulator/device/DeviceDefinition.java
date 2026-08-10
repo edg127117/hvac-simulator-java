@@ -1,6 +1,7 @@
 package com.hvac.simulator.device;
 
 import com.hvac.simulator.device.port.PortDefinition;
+import com.hvac.simulator.device.parameter.ParameterDefinition;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -11,7 +12,16 @@ public record DeviceDefinition(
         DeviceModuleKey key,
         String displayName,
         List<PortDefinition> ports,
-        TimeStepCapability timeStepCapability) {
+        TimeStepCapability timeStepCapability,
+        List<ParameterDefinition> parameters) {
+
+    public DeviceDefinition(
+            DeviceModuleKey key,
+            String displayName,
+            List<PortDefinition> ports,
+            TimeStepCapability timeStepCapability) {
+        this(key, displayName, ports, timeStepCapability, List.of());
+    }
 
     public DeviceDefinition {
         Objects.requireNonNull(key, "设备模块键不能为空");
@@ -31,6 +41,15 @@ public record DeviceDefinition(
             }
         }
         Objects.requireNonNull(timeStepCapability, "设备时间步能力不能为空");
+        Objects.requireNonNull(parameters, "设备参数不能为空");
+        parameters = List.copyOf(parameters);
+        var parameterCodes = new HashSet<String>();
+        for (var parameter : parameters) {
+            Objects.requireNonNull(parameter, "设备参数不能包含空值");
+            if (!parameterCodes.add(parameter.code())) {
+                throw new IllegalArgumentException("设备参数编码重复: " + parameter.code());
+            }
+        }
     }
 
     public Optional<PortDefinition> findPort(String portId) {
@@ -38,5 +57,12 @@ public record DeviceDefinition(
             return Optional.empty();
         }
         return ports.stream().filter(port -> port.id().equals(portId)).findFirst();
+    }
+
+    public Optional<ParameterDefinition> findParameter(String code) {
+        if (code == null || code.isBlank()) {
+            return Optional.empty();
+        }
+        return parameters.stream().filter(parameter -> parameter.code().equals(code)).findFirst();
     }
 }
