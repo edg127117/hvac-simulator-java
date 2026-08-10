@@ -1,6 +1,6 @@
 # 通用设备与拓扑引擎基础 Implementation Plan
 
-> 状态：待用户确认，尚未实施。
+> 状态：已确认、已实施并完成自动化验证；分支发布和合并状态以当前 Git 与 `PROJECT_STATUS.md` 为准。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
