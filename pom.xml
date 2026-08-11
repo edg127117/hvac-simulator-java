@@ -22,6 +22,7 @@
         <junit.version>6.1.2</junit.version>
         <xchart.version>4.0.3</xchart.version>
         <spring-boot.version>4.1.0</spring-boot.version>
+        <paho.version>1.2.5</paho.version>
     </properties>
 
     <dependencyManagement>
