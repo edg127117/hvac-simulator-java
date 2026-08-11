@@ -1,5 +1,6 @@
 # Maven 构建输出
 /target/
+**/target/
 
 # 仿真运行输出
 /output/

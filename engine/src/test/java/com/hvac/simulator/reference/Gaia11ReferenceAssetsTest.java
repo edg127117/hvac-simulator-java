@@ -14,7 +14,7 @@ import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
 
 class Gaia11ReferenceAssetsTest {
-    private static final Path REPOSITORY_ROOT = Path.of("").toAbsolutePath();
+    private static final Path REPOSITORY_ROOT = locateRepositoryRoot();
 
     @Test
     void preservesOriginalSourceBytes() throws Exception {
@@ -28,11 +28,11 @@ class Gaia11ReferenceAssetsTest {
     @Test
     void freezesCompleteBaselineAssetsOutsideProductionResults() throws Exception {
         Path weather = REPOSITORY_ROOT.resolve(
-                "src/main/resources/gaia-baseline/gaia-1.1/python-weather.csv");
+                "engine/src/main/resources/gaia-baseline/gaia-1.1/python-weather.csv");
         Path random = REPOSITORY_ROOT.resolve(
-                "src/main/resources/gaia-baseline/gaia-1.1/python-random-draws.csv");
+                "engine/src/main/resources/gaia-baseline/gaia-1.1/python-random-draws.csv");
         Path results = REPOSITORY_ROOT.resolve(
-                "src/test/resources/gaia-baseline/gaia-1.1/python-results.csv");
+                "engine/src/test/resources/gaia-baseline/gaia-1.1/python-results.csv");
         Path plot = REPOSITORY_ROOT.resolve("reference/gaia-1.1/python-reference-plot.png");
 
         assertCsv(weather, 4, 10_080, "2024-07-01 00:00:00", "2024-07-07 23:59:00");
@@ -40,7 +40,7 @@ class Gaia11ReferenceAssetsTest {
         assertCsv(results, 30, 10_080, "2024-07-01 00:00:00", "2024-07-07 23:59:00");
         assertTrue(Files.size(plot) > 10_000, "五联参考图不能为空或异常过小");
         assertFalse(Files.exists(REPOSITORY_ROOT.resolve(
-                "src/main/resources/gaia-baseline/gaia-1.1/python-results.csv")));
+                "engine/src/main/resources/gaia-baseline/gaia-1.1/python-results.csv")));
     }
 
     private static void assertCsv(
@@ -66,5 +66,16 @@ class Gaia11ReferenceAssetsTest {
     private static String sha256(Path path) throws IOException, NoSuchAlgorithmException {
         return HexFormat.of().withUpperCase().formatHex(
                 MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)));
+    }
+
+    private static Path locateRepositoryRoot() {
+        Path current = Path.of("").toAbsolutePath();
+        while (current != null && !Files.isRegularFile(current.resolve("reference/gaia-1.1/Gaia1.1.py"))) {
+            current = current.getParent();
+        }
+        if (current == null) {
+            throw new IllegalStateException("无法定位仓库根目录");
+        }
+        return current;
     }
 }

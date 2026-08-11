@@ -47,9 +47,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 REPOSITORY_ROOT = SCRIPT_DIR.parents[1]
 SOURCE = SCRIPT_DIR / "Gaia1.1.py"
 OFFICIAL_OUTPUTS = {
-    "weather": REPOSITORY_ROOT / "src/main/resources/gaia-baseline/gaia-1.1/python-weather.csv",
-    "random": REPOSITORY_ROOT / "src/main/resources/gaia-baseline/gaia-1.1/python-random-draws.csv",
-    "results": REPOSITORY_ROOT / "src/test/resources/gaia-baseline/gaia-1.1/python-results.csv",
+    "weather": REPOSITORY_ROOT / "engine/src/main/resources/gaia-baseline/gaia-1.1/python-weather.csv",
+    "random": REPOSITORY_ROOT / "engine/src/main/resources/gaia-baseline/gaia-1.1/python-random-draws.csv",
+    "results": REPOSITORY_ROOT / "engine/src/test/resources/gaia-baseline/gaia-1.1/python-results.csv",
     "plot": SCRIPT_DIR / "python-reference-plot.png",
 }
 
