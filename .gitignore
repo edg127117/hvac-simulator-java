@@ -13,3 +13,8 @@
 # 本地日志和临时文件
 *.log
 *.tmp
+
+# Gaia 1.1 Python 基准本地环境
+/.venv-gaia11/
+__pycache__/
+*.py[cod]
