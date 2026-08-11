@@ -5,12 +5,19 @@ param(
     [string]$BuildingId = 'BLD001',
     [string]$DeviceId = 'WCR1',
     [string]$BrokerHost = '127.0.0.1',
-    [int]$BrokerPort = 1883
+    [int]$BrokerPort = 1883,
+    [ValidateRange(3, 60)]
+    [int]$ActiveSteps = 10,
+    [ValidateRange(3, 60)]
+    [int]$MinimumTrendPoints = 3
 )
 
 $ErrorActionPreference = 'Stop'
 $SimulatorBaseUrl = $SimulatorBaseUrl.TrimEnd('/')
 $PlatformBaseUrl = $PlatformBaseUrl.TrimEnd('/')
+if ($MinimumTrendPoints -gt $ActiveSteps) {
+    throw 'MinimumTrendPoints cannot exceed ActiveSteps.'
+}
 
 function Invoke-JsonRequest {
     param(
@@ -80,16 +87,34 @@ if ($runView.status -ne 'COMPLETED') {
 }
 
 $rows = Invoke-JsonRequest GET "$SimulatorBaseUrl/api/simulation-runs/$($run.runId)/rows?offset=0&limit=1000" $null
-$activeRow = $rows.items | Where-Object { [double]$_.'measured_COP' -gt 0.0 } | Select-Object -First 1
-if ($null -eq $activeRow) {
-    throw 'No active Gaia 1.1 row was found in the first 1,000 time steps.'
+$items = @($rows.items)
+$activeSamples = @()
+for ($index = 0; $index -lt $items.Count; $index++) {
+    $copValue = [double]$items[$index].'measured_COP'
+    if ($copValue -gt 0.0) {
+        $activeSamples += [pscustomobject]@{
+            sourceStep = $index
+            measuredCop = $copValue
+        }
+    }
 }
-$stepIndex = [array]::IndexOf([array]$rows.items, $activeRow)
-$expectedCop = [double]$activeRow.'measured_COP'
+if ($activeSamples.Count -lt $ActiveSteps) {
+    throw "Only $($activeSamples.Count) active Gaia 1.1 rows were found in the first 1,000 time steps; expected $ActiveSteps."
+}
+$selectedActiveSamples = @($activeSamples | Select-Object -First $ActiveSteps)
+$fromStep = [int]$selectedActiveSamples[0].sourceStep
+$toStep = [int]$selectedActiveSamples[-1].sourceStep
+$replaySteps = $toStep - $fromStep + 1
+$expectedLatestCop = [double]$selectedActiveSamples[-1].measuredCop
+
+$latestBeforeDelivery = Invoke-JsonRequest GET "$PlatformBaseUrl/hvac/buildings/$BuildingId/indicators/latest" $null $platformHeaders
+$previousCop = $latestBeforeDelivery.data.indicators | Where-Object {
+    $_.indicatorCode -eq 'WCR_COP'
+} | Select-Object -First 1
 
 $delivery = Invoke-JsonRequest POST "$SimulatorBaseUrl/api/simulation-runs/$($run.runId)/mqtt-deliveries" @{
-    fromStep = $stepIndex
-    toStep = $stepIndex
+    fromStep = $fromStep
+    toStep = $toStep
     timeMode = 'REBASE_TO_NOW'
     buildingId = $BuildingId
     deviceId = $DeviceId
@@ -98,10 +123,13 @@ $deliveryView = Wait-Until `
     { Invoke-JsonRequest GET "$SimulatorBaseUrl/api/simulation-runs/$($run.runId)/mqtt-deliveries/$($delivery.deliveryId)" $null } `
     { param($value) $value.status -in @('COMPLETED', 'PARTIAL_FAILED', 'FAILED') } `
     30 'MQTT delivery completion'
-if ($deliveryView.status -ne 'COMPLETED' -or $deliveryView.successfulMessages -ne 4) {
+$expectedMessages = $replaySteps * 4
+if ($deliveryView.status -ne 'COMPLETED' -or $deliveryView.successfulMessages -ne $expectedMessages) {
     throw "MQTT delivery was not complete: $($deliveryView | ConvertTo-Json -Compress)"
 }
 
+$createdAt = [DateTimeOffset]::Parse([string]$deliveryView.createdAt)
+$latestMinuteCutoff = $createdAt.AddMinutes(-2).ToUnixTimeMilliseconds()
 $latest = Wait-Until `
     { Invoke-JsonRequest GET "$PlatformBaseUrl/hvac/buildings/$BuildingId/indicators/latest" $null $platformHeaders } `
     {
@@ -109,34 +137,74 @@ $latest = Wait-Until `
         $indicator = $value.data.indicators | Where-Object {
             $_.indicatorCode -eq 'WCR_COP' -and $_.status -eq 'SUCCESS' -and $null -ne $_.minuteStart
         } | Select-Object -First 1
-        $null -ne $indicator -and $indicator.minuteStart -ge ([DateTimeOffset]::UtcNow.AddMinutes(-5).ToUnixTimeMilliseconds())
+        if ($null -eq $indicator -or $indicator.minuteStart -lt $latestMinuteCutoff) {
+            return $false
+        }
+        $tolerance = [Math]::Max(1.0E-8, [Math]::Abs($expectedLatestCop) * 1.0E-8)
+        return [Math]::Abs([double]$indicator.value - $expectedLatestCop) -le $tolerance
     } `
-    90 'central HVAC WCR_COP calculation'
+    120 'central HVAC WCR_COP calculation'
 
 $cop = $latest.data.indicators | Where-Object { $_.indicatorCode -eq 'WCR_COP' } | Select-Object -First 1
-$difference = [Math]::Abs([double]$cop.value - $expectedCop)
-if ($difference -gt 0.02) {
-    throw "WCR_COP mismatch. expected=$expectedCop actual=$($cop.value) difference=$difference"
-}
-
-$trendFrom = [long]$cop.minuteStart
-$trendTo = $trendFrom + 120000
+$trendFrom = [long]$cop.minuteStart - (($replaySteps - 1L) * 60000L)
+$trendTo = [long]$cop.minuteStart + 60000L
 $trendUri = "$PlatformBaseUrl/hvac/buildings/$BuildingId/indicators/trends?indicatorIds=$([Uri]::EscapeDataString($cop.indicatorId))&from=$trendFrom&to=$trendTo"
-$trend = Invoke-JsonRequest GET $trendUri $null $platformHeaders
-$records = @($trend.data.series[0].records)
-if ($records.Count -lt 1) {
-    throw 'WCR_COP latest value exists, but the central platform trend contains no matching record.'
+$expectedByMinute = @{}
+foreach ($sample in $selectedActiveSamples) {
+    $minute = [long]$cop.minuteStart - (($toStep - [int]$sample.sourceStep) * 60000L)
+    $expectedByMinute[$minute] = [double]$sample.measuredCop
+}
+$trend = Wait-Until `
+    { Invoke-JsonRequest GET $trendUri $null $platformHeaders } `
+    {
+        param($value)
+        $matched = @($value.data.series[0].records | Where-Object {
+            $expectedByMinute.ContainsKey([long]$_.time)
+        })
+        $matched.Count -ge $MinimumTrendPoints
+    } `
+    120 'central HVAC WCR_COP trend records'
+$records = @($trend.data.series[0].records | Sort-Object time)
+
+$recordsByTime = @{}
+foreach ($record in $records) {
+    $recordsByTime[[long]$record.time] = $record
+}
+$compared = 0
+$maxDifference = 0.0
+foreach ($entry in $expectedByMinute.GetEnumerator()) {
+    $minute = [long]$entry.Key
+    if (-not $recordsByTime.ContainsKey($minute)) {
+        continue
+    }
+    $expected = [double]$entry.Value
+    $actual = [double]$recordsByTime[$minute].average
+    $difference = [Math]::Abs($actual - $expected)
+    $tolerance = [Math]::Max(1.0E-8, [Math]::Abs($expected) * 1.0E-8)
+    if ($difference -gt $tolerance) {
+        throw "WCR_COP mismatch at minute $minute. expected=$expected actual=$actual difference=$difference tolerance=$tolerance"
+    }
+    $maxDifference = [Math]::Max($maxDifference, $difference)
+    $compared++
+}
+if ($compared -lt $MinimumTrendPoints) {
+    throw "Only $compared WCR_COP trend records matched the $ActiveSteps expected active Gaia time steps."
 }
 
 [pscustomobject]@{
     result = 'CENTRAL_HVAC_COP_VERIFIED'
     runId = $run.runId
     deliveryId = $delivery.deliveryId
-    sourceStep = $stepIndex
-    expectedMeasuredCop = $expectedCop
+    sourceFromStep = $fromStep
+    sourceToStep = $toStep
+    replayTimeSteps = $replaySteps
+    expectedActivePoints = $ActiveSteps
+    expectedLatestMeasuredCop = $expectedLatestCop
     platformWcrCop = [double]$cop.value
-    absoluteDifference = $difference
+    maximumAbsoluteDifference = $maxDifference
     platformMinuteStart = [long]$cop.minuteStart
     trendRecordCount = $records.Count
+    comparedTrendPoints = $compared
+    previousPlatformMinuteStart = if ($null -eq $previousCop) { $null } else { [long]$previousCop.minuteStart }
     mqttMessages = $deliveryView.successfulMessages
 }

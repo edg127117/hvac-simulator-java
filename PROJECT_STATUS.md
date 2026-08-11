@@ -35,11 +35,12 @@ Gaia 1.1 已完成“Python 冻结基准 → Java 忠实转换 → Spring Boot �
 - 独立 Paho MQTT 适配器默认关闭，Broker、身份、凭据和主题只从服务器配置注入；发送 QoS 1、非保留消息。
 - 仅将 Gaia 1.1 可提供的测量量映射为 `WCR1_TWin`、`WCR1_TWout`、`WCR1_Flow` 和 `WCR1_PPE`；流量由 m³/s 转换为 m³/h，不伪造其他测点。
 - 单元和服务测试覆盖精确 payload、四测点数量、失败隔离、Gaia 1.0 拒绝发送，以及映射值按中央平台公式计算的 COP 与 Java `measured_COP` 一致。
-- `scripts/Verify-Gaia11CentralHvacCop.ps1` 固化真实 Broker、平台最新值与趋势的验收流程，JWT 仅从参数或环境变量读取。
+- `scripts/Verify-Gaia11CentralHvacCop.ps1` 固化真实 Broker、平台最新值与趋势的验收流程，JWT 仅从参数或环境变量读取；脚本按真实启停序列在连续回放窗口中选择指定数量的有效 COP 点。
+- 本机使用真实 EMQX、MySQL、TDengine、Redis 和中央平台 `origin/main` 完成本地集成验收：连续回放 704–740 共 37 个时间步，148 条 MQTT 消息全部发布成功，中央平台形成并逐点匹配 10 个 `WCR_COP` 趋势记录，最大绝对差为 `2.20×10⁻¹²`；中央平台页面已显示真实 COP 趋势。
 
 ## 4. 未验证或未实现
 
-- **中央空调平台现场式验证未完成。** 当前机器没有可用的 1883 Broker、目标平台实例、授权 JWT 或 Docker CLI，因此未实际证明 `iot-platform-demo` 已接收本次消息、计算 WCR_COP 并形成趋势。当前已验证的是本仓库 MQTT 合同和公式等价性，不能写成外部平台验收通过。
+- **本地中央平台集成验收已完成，真实现场仍未验证。** 本地 Docker 环境已证明 `iot-platform-demo` 能接收本次消息、计算 `WCR_COP`、持久化趋势并在页面展示；该证据不代表现场 Broker、网络、凭据、生产部署或长期运行已经验收。
 - 尚未执行 Gaia 1.1 性能验收、长期运行、工程物理合理性验收或领导业务/视觉确认；忠实转换通过不等于原模型假设已经获得物理认可。
 - Spring Boot 任务、结果与 MQTT 投递状态尚未持久化；服务重启后不恢复。MySQL、TDengine、文件对象存储、多实例调度和断点恢复未实现。
 - 用户权限、自由拓扑画布、完整中央空调设备库、拓扑编译执行、端口传播、闭环迭代、守恒求解和完整水力求解未实现。
@@ -50,12 +51,13 @@ Gaia 1.1 已完成“Python 冻结基准 → Java 忠实转换 → Spring Boot �
 - Gaia 1.1 忠实保留原模型的全局随机消费顺序、停机流量噪声、共享传感器偏差和现有公式表达；如需修正物理行为，必须建立独立模型版本和新基准，不能覆盖本次冻结结果。
 - Gaia 1.0 与 Gaia 1.1 的同名字段可能具有不同来源语义，跨版本查询和后续持久化必须保留模型版本与来源信息。
 - 当前前端一次加载完整一周曲线；生产数据量扩大前需引入服务端窗口、降采样和持久化查询，不能沿用进程内 MVP 假设。
-- MQTT 外部验证依赖目标平台测点元数据、Broker、平台后端、TDengine/Redis 和有建筑权限的 JWT；缺少任一条件都只能标记为未验证。
+- 真实现场验证仍依赖现场测点元数据、Broker、平台后端、TDengine/Redis、网络与有建筑权限的 JWT；本地集成通过不能替代现场证据。
+- Gaia 1.1 基准中有 114 个有效测量 COP 时间步，但最长连续冷机运行仅 1 分钟；验收必须忠实回放包含多个有效点的连续时间窗口，不能为制造连续 COP 曲线而改变模型启停行为。
 
 ## 6. 下一步
 
-1. 完成本任务分支的 PR 审查与合并；合并前保持 Gaia 1.1 基准、Java 一致性和 Gaia 1.0 回归为必需检查。
-2. 在有 Broker、中央平台完整基础设施和授权 JWT 的环境运行 `scripts/Verify-Gaia11CentralHvacCop.ps1`，保存 WCR_COP 最新值、趋势和数值差异证据。
+1. 完成本任务分支的 PR 审查与合并；合并前保持 Gaia 1.1 基准、Java 一致性、Gaia 1.0 回归和本地中央平台集成验收为必需检查。
+2. 在真实现场环境复用 `scripts/Verify-Gaia11CentralHvacCop.ps1`，单独保存 Broker、平台部署、网络、最新值和趋势证据，不复用本地结论冒充现场验收。
 3. 另立任务实现持久化任务/结果平台；数据库实现不得改变已冻结模型和版本语义。
 4. 按既有自由拓扑平台设计继续拆分具体设备运行时、拓扑执行与水力/守恒求解，不在本纵向切片上伪装自由拓扑能力。
 
@@ -68,4 +70,4 @@ Gaia 1.1 已完成“Python 冻结基准 → Java 忠实转换 → Spring Boot �
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 当前任务分支已更新 | 已实现、已测试、未验证和下一步 |
 | [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md) | 已确认、已按纵向切片实施 | 模型分层、字段语义和验收边界；本任务未改写 |
 | [`通用自由拓扑仿真平台设计`](docs/superpowers/specs/2026-08-10-free-topology-simulation-platform-design.md) | 已确认、分阶段实施中 | 本任务未修改，不以固定 Gaia 切片冒充自由拓扑 |
-| [`Gaia 1.1 平台 MVP 实施计划`](docs/superpowers/plans/2026-08-10-gaia-1.1-platform-mvp.md) | 已执行，外部平台验收仍未验证 | 文件、接口、测试、阶段验收和提交边界 |
+| [`Gaia 1.1 平台 MVP 实施计划`](docs/superpowers/plans/2026-08-10-gaia-1.1-platform-mvp.md) | 已执行，本地中央平台集成验收通过 | 文件、接口、测试、阶段验收和提交边界；真实现场仍未验证 |
