@@ -20,3 +20,9 @@
 /.venv-gaia11/
 __pycache__/
 *.py[cod]
+
+# Vue 本地依赖与构建输出
+/web/node_modules/
+/web/dist/
+/web/test-results/
+/web/playwright-report/
