@@ -3,15 +3,24 @@ package com.hvac.simulator.app;
 import com.hvac.simulator.config.BuildingEnvelope;
 import com.hvac.simulator.config.HvacParameters;
 import com.hvac.simulator.config.InternalLoad;
+import com.hvac.simulator.config.Gaia11MeasurementParameters;
 import com.hvac.simulator.config.SimulationConfig;
 import com.hvac.simulator.config.WeatherParameters;
 import com.hvac.simulator.model.BuildingThermalModel;
 import com.hvac.simulator.model.HvacSystem;
 import com.hvac.simulator.output.CsvResultWriter;
 import com.hvac.simulator.output.GaiaChartRenderer;
+import com.hvac.simulator.output.Gaia11ChartRenderer;
+import com.hvac.simulator.output.Gaia11CsvResultWriter;
+import com.hvac.simulator.release.ModelVersion;
+import com.hvac.simulator.measurement.FrozenRandomDrawSource;
+import com.hvac.simulator.measurement.Gaia11MeasurementModel;
+import com.hvac.simulator.measurement.SeededRandomDrawSource;
+import com.hvac.simulator.simulation.Gaia11Simulator;
 import com.hvac.simulator.simulation.SimulationResult;
 import com.hvac.simulator.simulation.Simulator;
 import com.hvac.simulator.weather.BaselineWeatherSource;
+import com.hvac.simulator.weather.Gaia11BaselineWeatherSource;
 import com.hvac.simulator.weather.SyntheticWeatherGenerator;
 import com.hvac.simulator.weather.WeatherSource;
 import java.nio.file.Path;
@@ -20,6 +29,8 @@ import java.nio.file.Path;
 public final class GaiaSimulatorApplication {
 
     private static final String BASELINE_RESOURCE = "gaia-baseline/python-results.csv";
+    private static final String GAIA_11_WEATHER = "gaia-baseline/gaia-1.1/python-weather.csv";
+    private static final String GAIA_11_RANDOM = "gaia-baseline/gaia-1.1/python-random-draws.csv";
 
     public static void main(String[] args) {
         try {
@@ -38,32 +49,53 @@ public final class GaiaSimulatorApplication {
         Options options = parse(args);
         SimulationConfig config = SimulationConfig.gaiaDemo(options.seed());
         WeatherSource weatherSource = switch (options.weatherMode()) {
-            case "baseline" -> new BaselineWeatherSource(BASELINE_RESOURCE);
+            case "baseline" -> options.modelVersion() == ModelVersion.GAIA_1_1
+                    ? new Gaia11BaselineWeatherSource(GAIA_11_WEATHER)
+                    : new BaselineWeatherSource(BASELINE_RESOURCE);
             case "synthetic" -> new SyntheticWeatherGenerator(WeatherParameters.gaiaDefaults());
             default -> throw new IllegalArgumentException("未知气象模式：" + options.weatherMode());
         };
         var building = new BuildingThermalModel(
                 BuildingEnvelope.gaiaDefaults(), InternalLoad.gaiaDefaults());
         var hvac = new HvacSystem(HvacParameters.gaiaDefaults());
-        SimulationResult result = new Simulator(config, building, hvac).run(weatherSource.load(config));
-
-        Path csv = options.outputDirectory().resolve("hvac_simulation_results.csv");
-        Path plot = options.outputDirectory().resolve("simulation_plot.png");
-        new CsvResultWriter().write(result, csv);
-        new GaiaChartRenderer().write(result, plot);
-        System.out.println("仿真完成：模式=" + options.weatherMode()
-                + "，步数=" + result.steps().size()
+        int steps;
+        if (options.modelVersion() == ModelVersion.GAIA_1_1) {
+            var random = options.weatherMode().equals("baseline")
+                    ? new FrozenRandomDrawSource(GAIA_11_RANDOM)
+                    : new SeededRandomDrawSource(options.seed());
+            var result = new Gaia11Simulator(
+                    config, building, hvac,
+                    new Gaia11MeasurementModel(Gaia11MeasurementParameters.gaiaDefaults()), random)
+                    .run(weatherSource.load(config));
+            new Gaia11CsvResultWriter().write(
+                    result, options.outputDirectory().resolve("hvac_simulation_results.csv"));
+            new Gaia11ChartRenderer().write(
+                    result, options.outputDirectory().resolve("simulation_plot.png"));
+            steps = result.steps().size();
+        } else {
+            SimulationResult result = new Simulator(config, building, hvac).run(weatherSource.load(config));
+            new CsvResultWriter().write(
+                    result, options.outputDirectory().resolve("hvac_simulation_results.csv"));
+            new GaiaChartRenderer().write(
+                    result, options.outputDirectory().resolve("simulation_plot.png"));
+            steps = result.steps().size();
+        }
+        System.out.println("仿真完成：模型=" + options.modelVersion().code()
+                + "，模式=" + options.weatherMode() + "，步数=" + steps
                 + "，输出目录=" + options.outputDirectory().toAbsolutePath());
         return 0;
     }
 
     private Options parse(String[] args) {
         String weatherMode = "baseline";
+        ModelVersion modelVersion = ModelVersion.GAIA_1_0;
         long seed = 42L;
         Path outputDirectory = Path.of("output");
         for (String argument : args) {
             if (argument.startsWith("--weather=")) {
                 weatherMode = argument.substring("--weather=".length());
+            } else if (argument.startsWith("--model=")) {
+                modelVersion = ModelVersion.parse(argument.substring("--model=".length()));
             } else if (argument.startsWith("--seed=")) {
                 String value = argument.substring("--seed=".length());
                 try {
@@ -84,8 +116,9 @@ public final class GaiaSimulatorApplication {
         if (!weatherMode.equals("baseline") && !weatherMode.equals("synthetic")) {
             throw new IllegalArgumentException("未知气象模式：" + weatherMode);
         }
-        return new Options(weatherMode, seed, outputDirectory);
+        return new Options(modelVersion, weatherMode, seed, outputDirectory);
     }
 
-    private record Options(String weatherMode, long seed, Path outputDirectory) {}
+    private record Options(
+            ModelVersion modelVersion, String weatherMode, long seed, Path outputDirectory) {}
 }

@@ -26,6 +26,22 @@ class GaiaSimulatorApplicationTest {
     }
 
     @Test
+    void gaia11RunCreatesThirtyFieldCsvAndFivePanelPlot() throws Exception {
+        Path output = tempDir.resolve("gaia11");
+
+        int exitCode = new GaiaSimulatorApplication().run(new String[] {
+            "--model=gaia-1.1", "--weather=baseline", "--output=" + output
+        });
+
+        assertEquals(0, exitCode);
+        String header = Files.readAllLines(output.resolve("hvac_simulation_results.csv")).getFirst();
+        assertEquals(30, header.split(",", -1).length);
+        var image = javax.imageio.ImageIO.read(output.resolve("simulation_plot.png").toFile());
+        assertEquals(1_400, image.getWidth());
+        assertTrue(image.getHeight() >= 1_390 && image.getHeight() <= 1_410);
+    }
+
+    @Test
     void rejectsUnknownArguments() {
         var application = new GaiaSimulatorApplication();
 
@@ -35,5 +51,7 @@ class GaiaSimulatorApplicationTest {
                 () -> application.run(new String[] {"--weather=invalid"}));
         assertThrows(IllegalArgumentException.class,
                 () -> application.run(new String[] {"--seed=not-a-number"}));
+        assertThrows(IllegalArgumentException.class,
+                () -> application.run(new String[] {"--model=gaia-2.0"}));
     }
 }

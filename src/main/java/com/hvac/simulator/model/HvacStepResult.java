@@ -11,8 +11,10 @@ public record HvacStepResult(
         double chilledWaterSupplyC,
         double chilledWaterReturnC,
         double coolingWaterSupplyC,
+        double coolingWaterReturnC,
         double chillerPlr,
         double chillerCop,
         double chilledWaterFlowM3PerSecond,
+        double coolingWaterFlowM3PerSecond,
         double pipeHeatGainKw,
         double pipeTemperatureChangeC) {}

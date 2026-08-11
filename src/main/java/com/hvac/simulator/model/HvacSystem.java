@@ -127,6 +127,9 @@ public final class HvacSystem {
         double chilledWaterPumpKw = calculatePumpPower(
                 chilledWaterFlowM3PerSecond, parameters.chilledWaterPump(), true);
         double coolingWaterFlowM3PerSecond = chilledWaterFlowM3PerSecond * 1.1;
+        double coolingWaterReturnC = tower.coolingWaterOutletC() + actualRejectionKw * 1_000.0
+                / (WATER_DENSITY_KG_PER_M3 * WATER_SPECIFIC_HEAT_J_PER_KG_K
+                * (coolingWaterFlowM3PerSecond + 1e-6));
         double coolingWaterPumpKw = calculatePumpPower(
                 coolingWaterFlowM3PerSecond, parameters.coolingWaterPump(), true);
         int terminalCount = Math.max(1, (int) (parameters.terminal().count() * chiller.plr()));
@@ -142,13 +145,14 @@ public final class HvacSystem {
                 chiller.powerKw(), chilledWaterPumpKw, coolingWaterPumpKw,
                 tower.fanPowerKw(), terminalFanKw, totalPowerKw,
                 chiller.chilledWaterSupplyC(), previousChilledWaterReturnC,
-                tower.coolingWaterOutletC(), chiller.plr(), chiller.cop(),
-                chilledWaterFlowM3PerSecond, pipeHeatKw, pipeTemperatureChangeC);
+                tower.coolingWaterOutletC(), coolingWaterReturnC, chiller.plr(), chiller.cop(),
+                chilledWaterFlowM3PerSecond, coolingWaterFlowM3PerSecond,
+                pipeHeatKw, pipeTemperatureChangeC);
     }
 
     private HvacStepResult stoppedResult() {
         return new HvacStepResult(
                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                7.0, 12.0, 32.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                7.0, 12.0, 32.0, 37.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
 }

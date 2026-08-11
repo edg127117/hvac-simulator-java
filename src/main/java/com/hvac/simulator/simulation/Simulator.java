@@ -30,7 +30,12 @@ public final class Simulator {
     }
 
     public SimulationResult run(WeatherSeries weather) {
+        return run(weather, SimulationProgressListener.NOOP);
+    }
+
+    public SimulationResult run(WeatherSeries weather, SimulationProgressListener progress) {
         Objects.requireNonNull(weather, "气象序列不能为空");
+        Objects.requireNonNull(progress, "进度监听器不能为空");
         if (weather.points().size() != config.expectedSteps()) {
             throw new IllegalArgumentException("气象点数与仿真步数不一致");
         }
@@ -67,6 +72,7 @@ public final class Simulator {
                     hvacResult.chilledWaterSupplyC(), hvacResult.coolingWaterSupplyC(),
                     hvacResult.pipeHeatGainKw()));
             previousChilledWaterReturnC = hvacResult.chilledWaterReturnC();
+            progress.onProgress(index + 1, config.expectedSteps(), point.timestamp());
         }
         return new SimulationResult(steps);
     }
