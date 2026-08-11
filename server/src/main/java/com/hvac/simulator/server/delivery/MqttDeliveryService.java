@@ -16,6 +16,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,7 @@ public class MqttDeliveryService {
     private final ExecutorService executor;
     private final ConcurrentHashMap<UUID, MqttDelivery> deliveries = new ConcurrentHashMap<>();
 
+    @Autowired
     public MqttDeliveryService(
             SimulationRunService runs,
             CentralHvacPointMapper mapper,
