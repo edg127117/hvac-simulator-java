@@ -3,6 +3,8 @@ param()
 
 $ErrorActionPreference = 'Stop'
 $guardrailScript = (Resolve-Path (Join-Path $PSScriptRoot '..\Test-RepositoryGuardrails.ps1')).Path
+$hookInstallerScript = Join-Path $PSScriptRoot '..\Install-RepositoryHooks.ps1'
+$repositoryHook = Join-Path $PSScriptRoot '..\..\.githooks\pre-commit'
 $failures = [System.Collections.Generic.List[string]]::new()
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 $utf8Bom = [System.Text.UTF8Encoding]::new($true)
@@ -188,6 +190,28 @@ function Invoke-GuardrailCase {
     }
 }
 
+function Invoke-HookInstaller {
+    param(
+        [string]$Root,
+        [switch]$Check
+    )
+
+    $arguments = @(
+        '-NoProfile'
+        '-ExecutionPolicy'
+        'Bypass'
+        '-File'
+        $hookInstallerScript
+        '-RepositoryRoot'
+        $Root
+    )
+    if ($Check) {
+        $arguments += '-Check'
+    }
+    $output = & powershell.exe @arguments 2>&1
+    return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = ($output | Out-String) }
+}
+
 $noChange = { param($root) }
 
 Invoke-GuardrailCase 'valid-lf' $noChange 0
@@ -284,6 +308,71 @@ foreach ($heading in @('状态影响', '检查范围', '文档同步', '历史�
 
 $uncheckedBody = $validBody.Replace('- [x] 已同步当前项目文档', '- [ ] 已同步当前项目文档')
 Invoke-GuardrailCase 'pr-unchecked-section' $noChange 1 -Mode PullRequest -PullRequestBody $uncheckedBody
+
+if (-not (Test-Path -LiteralPath $hookInstallerScript) -or -not (Test-Path -LiteralPath $repositoryHook)) {
+    $failures.Add('hook-files-missing expected Hook and installer implementation files')
+} else {
+    $hookText = [System.IO.File]::ReadAllText($repositoryHook)
+    if ($hookText.Contains("`r")) {
+        $failures.Add('hook-line-endings expected LF-only content')
+    }
+    foreach ($requiredText in @(
+        'command -v pwsh',
+        'Test-RepositoryGuardrails.ps1 -Mode Staged -BaseRef origin/main',
+        'powershell.exe -NoProfile -ExecutionPolicy Bypass'
+    )) {
+        if (-not $hookText.Contains($requiredText)) {
+            $failures.Add("hook-content missing: $requiredText")
+        }
+    }
+
+    $hookTestRoot = New-TestRepository 'repository-hook'
+    try {
+        $checkBeforeInstall = Invoke-HookInstaller $hookTestRoot -Check
+        if ($checkBeforeInstall.ExitCode -eq 0) {
+            $failures.Add('hook-check-before-install expected nonzero exit code')
+        }
+
+        $installResult = Invoke-HookInstaller $hookTestRoot
+        if ($installResult.ExitCode -ne 0) {
+            $failures.Add("hook-install expected 0 but got $($installResult.ExitCode): $($installResult.Output.Trim())")
+        }
+        $configuredPath = (& git -C $hookTestRoot config --local --get core.hooksPath | Select-Object -First 1)
+        $configuredPath = if ($null -eq $configuredPath) { '' } else { $configuredPath.ToString().Trim() }
+        if ($configuredPath -ne '.githooks') {
+            $failures.Add("hook-install configured unexpected path: $configuredPath")
+        }
+
+        $checkAfterInstall = Invoke-HookInstaller $hookTestRoot -Check
+        if ($checkAfterInstall.ExitCode -ne 0 -or $checkAfterInstall.Output -notmatch 'REPOSITORY_HOOKS_OK') {
+            $failures.Add("hook-check-after-install failed: $($checkAfterInstall.Output.Trim())")
+        }
+
+        New-Item -ItemType Directory -Path (Join-Path $hookTestRoot 'scripts') -Force | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $hookTestRoot '.githooks') -Force | Out-Null
+        Copy-Item -LiteralPath $guardrailScript -Destination (Join-Path $hookTestRoot 'scripts/Test-RepositoryGuardrails.ps1')
+        Copy-Item -LiteralPath $repositoryHook -Destination (Join-Path $hookTestRoot '.githooks/pre-commit')
+        Invoke-Git $hookTestRoot update-ref refs/remotes/origin/main base
+        Add-Content -LiteralPath (Join-Path $hookTestRoot 'docs/superpowers/specs/example-design.md') -Encoding UTF8 -Value 'forbidden change'
+        Invoke-Git $hookTestRoot add -- docs/superpowers/specs/example-design.md
+
+        $previousPreference = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            $hookOutput = & git -C $hookTestRoot commit -m forbidden-change 2>&1
+            $hookExitCode = $LASTEXITCODE
+        } finally {
+            $ErrorActionPreference = $previousPreference
+        }
+        if ($hookExitCode -eq 0 -or ($hookOutput | Out-String) -notmatch '冻结历史文件') {
+            $failures.Add("hook-frozen-change expected rejection: $($hookOutput | Out-String)")
+        }
+    } catch {
+        $failures.Add("repository-hook threw: $($_.Exception.Message)")
+    } finally {
+        Remove-TestRepository $hookTestRoot
+    }
+}
 
 if ($failures.Count -gt 0) {
     $failures | ForEach-Object { Write-Output "FAILED: $_" }

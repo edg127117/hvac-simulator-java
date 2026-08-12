@@ -176,7 +176,13 @@ CLI 不传模型版本时保持 Gaia 1.0 兼容。Gaia 1.0 生成 17 字段 CSV 
 
 每份历史文档必须在标题后声明文档类型、冻结生命周期、当前状态入口、历史目录和使用限制。`docs/superpowers/.history-guardrails-enabled` 启用后，既有历史文档和标识文件禁止修改、删除或重命名；后续决策只能新建设计或计划承接。
 
-仓库级检查入口为 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/Test-RepositoryGuardrails.ps1 -Mode WorkingTree`。它验证历史文档标识与链接、当前状态入口和动态状态禁写规则；暂存与 PR 模式还验证冻结差异和 PR 文档同步结论。
+仓库级可执行入口如下：
+
+- 安装本仓库 Hook：`powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/Install-RepositoryHooks.ps1`；
+- 检查 Hook 配置：`powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/Install-RepositoryHooks.ps1 -Check`；
+- 检查当前工作树：`powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/Test-RepositoryGuardrails.ps1 -Mode WorkingTree`。
+
+Guardrails 验证历史文档标识与链接、当前状态入口和动态状态禁写规则；暂存与 PR 模式还验证冻结差异和 PR 文档同步结论。GitHub 工作流及任务名为 `Repository Guardrails / repository-guardrails`；只有合并后取得仓库 Ruleset 或分支保护设置证据，才能把它描述为 required check。
 
 ## 8. 维护规则
 
