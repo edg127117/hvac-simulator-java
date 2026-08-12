@@ -1,6 +1,13 @@
 # 通用自由拓扑仿真平台设计
 
-> 状态：已确认、待实施。
+> [!IMPORTANT]
+> 文档类型：设计记录<br>
+> 生命周期：冻结历史快照<br>
+> 当前状态：[PROJECT_STATUS.md](../../../PROJECT_STATUS.md)<br>
+> 历史目录：[docs/superpowers](../)<br>
+> 使用限制：本文记录任务当时的设计，不用于判断功能当前是否已实现或已验证。
+
+> 任务当时状态：已确认、待实施。
 >
 > 本文记录从现有 Gaia Java 仿真程序演进为通用自由拓扑仿真平台的正式目标、架构、数据和验收边界。本文是设计依据，不代表 Spring Boot、Vue、MySQL、TDengine、拓扑编辑器、权限或 MQTT 已经实现；当前可验证能力仍以代码、测试和 `PROJECT_STATUS.md` 为准。
 >

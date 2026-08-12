@@ -1,0 +1,27 @@
+name: Repository Guardrails
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  repository-guardrails:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run guardrail regression tests
+        shell: pwsh
+        run: ./scripts/tests/Invoke-RepositoryGuardrailTests.ps1
+      - name: Validate pull request
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: ./scripts/Test-RepositoryGuardrails.ps1 -Mode PullRequest -BaseRef "origin/${{ github.base_ref }}" -PullRequestBody $env:PR_BODY
+      - name: Validate main
+        if: github.event_name == 'push'
+        shell: pwsh
+        run: ./scripts/Test-RepositoryGuardrails.ps1 -Mode WorkingTree

@@ -1,5 +1,12 @@
 # Gaia 版本化参数目录与冷却塔效率接入 Implementation Plan
 
+> [!IMPORTANT]
+> 文档类型：实施计划<br>
+> 生命周期：冻结历史快照<br>
+> 当前状态：[PROJECT_STATUS.md](../../../PROJECT_STATUS.md)<br>
+> 历史目录：[docs/superpowers](../)<br>
+> 使用限制：本文记录任务当时的实施安排，不用于判断功能当前是否已实现或已验证。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 让 Gaia 1.0/1.1 分别发布带公共/版本专属标记的独立参数目录，并把 Gaia 1.1 真实冷却塔测点通过可选 MQTT 目标接入中央平台 `TOWER_EFF` 趋势链路。
