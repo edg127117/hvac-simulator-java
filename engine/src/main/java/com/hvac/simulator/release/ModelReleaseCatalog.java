@@ -13,13 +13,13 @@ public final class ModelReleaseCatalog {
     private final Map<ModelVersion, ModelReleaseDescriptor> releases;
 
     public ModelReleaseCatalog() {
-        List<ModelParameterDescriptor> physical = physicalParameters();
         releases = Map.of(
                 ModelVersion.GAIA_1_0,
-                new ModelReleaseDescriptor(ModelVersion.GAIA_1_0, "Gaia 1.0", 17, physical),
+                new ModelReleaseDescriptor(
+                        ModelVersion.GAIA_1_0, "Gaia 1.0", 17, gaia10Parameters()),
                 ModelVersion.GAIA_1_1,
                 new ModelReleaseDescriptor(ModelVersion.GAIA_1_1, "Gaia 1.1", 30,
-                        concat(physical, measurementParameters())));
+                        gaia11Parameters()));
     }
 
     public List<ModelReleaseDescriptor> releases() {
@@ -121,18 +121,29 @@ public final class ModelReleaseCatalog {
     private List<ModelParameterDescriptor> measurementParameters() {
         Gaia11MeasurementParameters m = Gaia11MeasurementParameters.gaiaDefaults();
         return List.of(
-                number("measurement.flowNoiseStdPercent", "流量噪声标准差", "测量", "%", m.flowNoiseStdPercent(), 0, 100),
-                number("measurement.temperatureNoiseStdC", "温度噪声标准差", "测量", "℃", m.temperatureNoiseStdC(), 0, 20),
-                number("measurement.sensorBias", "传感器统一偏差", "测量", "原量纲", m.sensorBias(), -100, 100),
-                number("measurement.powerMeterAccuracyPercent", "电能表精度", "测量", "%", m.powerMeterAccuracyPercent(), 0, 100));
+                number("measurement.flowNoiseStdPercent", "流量噪声标准差", "测量", "%",
+                        m.flowNoiseStdPercent(), 0, 100, ParameterScope.VERSION_SPECIFIC),
+                number("measurement.temperatureNoiseStdC", "温度噪声标准差", "测量", "℃",
+                        m.temperatureNoiseStdC(), 0, 20, ParameterScope.VERSION_SPECIFIC),
+                number("measurement.sensorBias", "传感器统一偏差", "测量", "原量纲",
+                        m.sensorBias(), -100, 100, ParameterScope.VERSION_SPECIFIC),
+                number("measurement.powerMeterAccuracyPercent", "电能表精度", "测量", "%",
+                        m.powerMeterAccuracyPercent(), 0, 100, ParameterScope.VERSION_SPECIFIC));
     }
 
     private ModelParameterDescriptor number(
             String code, String label, String group, String unit,
             double defaultValue, double minimum, double maximum) {
+        return number(code, label, group, unit, defaultValue, minimum, maximum,
+                ParameterScope.COMMON);
+    }
+
+    private ModelParameterDescriptor number(
+            String code, String label, String group, String unit,
+            double defaultValue, double minimum, double maximum, ParameterScope scope) {
         return new ModelParameterDescriptor(
                 code, label, group, unit, ParameterValueType.NUMBER,
-                defaultValue, minimum, maximum, true, null);
+                defaultValue, minimum, maximum, scope, true, null);
     }
 
     private ModelParameterDescriptor integer(
@@ -140,7 +151,7 @@ public final class ModelReleaseCatalog {
             double defaultValue, double minimum, double maximum) {
         return new ModelParameterDescriptor(
                 code, label, group, unit, ParameterValueType.INTEGER,
-                defaultValue, minimum, maximum, true, null);
+                defaultValue, minimum, maximum, ParameterScope.COMMON, true, null);
     }
 
     private double value(Map<String, Double> overrides, String code, double defaultValue) {
@@ -150,5 +161,13 @@ public final class ModelReleaseCatalog {
     private List<ModelParameterDescriptor> concat(
             List<ModelParameterDescriptor> first, List<ModelParameterDescriptor> second) {
         return java.util.stream.Stream.concat(first.stream(), second.stream()).toList();
+    }
+
+    private List<ModelParameterDescriptor> gaia10Parameters() {
+        return physicalParameters();
+    }
+
+    private List<ModelParameterDescriptor> gaia11Parameters() {
+        return concat(physicalParameters(), measurementParameters());
     }
 }

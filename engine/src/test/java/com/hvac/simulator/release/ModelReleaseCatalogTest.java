@@ -3,6 +3,7 @@ package com.hvac.simulator.release;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,6 +27,13 @@ class ModelReleaseCatalogTest {
 
         assertEquals(17, gaia10.outputFieldCount());
         assertEquals(30, gaia11.outputFieldCount());
+        assertNotSame(gaia10.parameters(), gaia11.parameters());
+        assertTrue(gaia10.parameters().stream()
+                .allMatch(parameter -> parameter.scope() == ParameterScope.COMMON));
+        assertEquals(19, gaia11.parameters().stream()
+                .filter(parameter -> parameter.scope() == ParameterScope.COMMON).count());
+        assertEquals(4, gaia11.parameters().stream()
+                .filter(parameter -> parameter.scope() == ParameterScope.VERSION_SPECIFIC).count());
         assertFalse(gaia10.parameters().stream().anyMatch(p -> p.code().startsWith("measurement.")));
         assertEquals(4, gaia11.parameters().stream().filter(p -> p.code().startsWith("measurement.")).count());
         assertFalse(gaia11.parameters().stream().anyMatch(p -> p.code().equalsIgnoreCase("R_wall")));
