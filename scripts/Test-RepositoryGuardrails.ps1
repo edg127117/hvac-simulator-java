@@ -218,3 +218,4 @@ if ($violations.Count -gt 0) {
 }
 
 Write-Output 'REPOSITORY_GUARDRAILS_OK'
+exit 0

@@ -380,3 +380,4 @@ if ($failures.Count -gt 0) {
 }
 
 Write-Output 'REPOSITORY_GUARDRAIL_TESTS_OK'
+exit 0

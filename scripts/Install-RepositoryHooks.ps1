@@ -38,3 +38,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Output 'REPOSITORY_HOOKS_OK'
+exit 0
