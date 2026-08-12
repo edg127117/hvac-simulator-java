@@ -1,5 +1,12 @@
 # Agent Skills Layering Implementation Plan
 
+> [!IMPORTANT]
+> 文档类型：实施计划<br>
+> 生命周期：冻结历史快照<br>
+> 当前状态：[PROJECT_STATUS.md](../../../PROJECT_STATUS.md)<br>
+> 历史目录：[docs/superpowers](../)<br>
+> 使用限制：本文记录任务当时的实施安排，不用于判断功能当前是否已实现或已验证。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 创建 HVAC 项目级仿真验证 Skill，并将仓库常驻规则精简为模型硬边界、全局 Skill 触发和项目专项注释要求。

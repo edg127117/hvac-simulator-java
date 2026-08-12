@@ -1,6 +1,13 @@
 # 设备运行时契约与公共能量数据模型 Implementation Plan
 
-> 状态：已确认、已实施并完成本地自动化验证；交付状态以 Git 和 PR 为准。
+> [!IMPORTANT]
+> 文档类型：实施计划<br>
+> 生命周期：冻结历史快照<br>
+> 当前状态：[PROJECT_STATUS.md](../../../PROJECT_STATUS.md)<br>
+> 历史目录：[docs/superpowers](../)<br>
+> 使用限制：本文记录任务当时的实施安排，不用于判断功能当前是否已实现或已验证。
+
+> 任务当时状态：已确认、已实施并完成本地自动化验证；交付状态以 Git 和 PR 为准。
 >
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

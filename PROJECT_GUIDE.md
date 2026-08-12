@@ -157,6 +157,7 @@ CLI 不传模型版本时保持 Gaia 1.0 兼容。Gaia 1.0 生成 17 字段 CSV 
 | [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md) | Gaia 1.1 的版本差异、测量层、指标语义、基准和验收边界 |
 | [`版本化参数与冷却塔效率接入设计`](docs/superpowers/specs/2026-08-11-gaia-versioned-parameters-and-tower-efficiency-design.md) | 独立参数目录、参数归属和可选冷却塔真实测点合同 |
 | [`文档生命周期与当前状态判定设计`](docs/superpowers/specs/2026-08-12-document-lifecycle-and-current-state-design.md) | 历史设计/计划冻结、当前状态证据顺序和新文档承接规则 |
+| [`历史状态隔离与自动防复发设计`](docs/superpowers/specs/2026-08-12-historical-status-isolation-and-guardrails-design.md) | 历史快照显式标识、当前状态检索隔离、冻结校验和本地/CI 防复发边界 |
 
 当前正式设计同样是冻结记录。正式决策变化时必须新建带日期设计，明确补充、替代或废止范围，再更新本节导航；不得回写旧设计正文。
 
@@ -167,10 +168,15 @@ CLI 不传模型版本时保持 Gaia 1.0 兼容。Gaia 1.0 生成 17 字段 CSV 
 | [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) | 早期固定 HVAC 平台设计；已由自由拓扑平台设计承接，不再代表当前最终平台边界 |
 | [`Gaia 1.1 平台 MVP 实施计划`](docs/superpowers/plans/2026-08-10-gaia-1.1-platform-mvp.md) | 固定模型纵向切片任务当时的文件、接口、测试和阶段验收安排 |
 | [`文档生命周期与当前状态整改实施计划`](docs/superpowers/plans/2026-08-12-document-lifecycle-and-current-state.md) | 本次规则整改的实施步骤和验证安排 |
+| [`历史状态隔离与自动防复发实施计划`](docs/superpowers/plans/2026-08-12-historical-status-isolation-and-guardrails.md) | 历史文档迁移、Guardrails、Hook、CI 和 PR 模板的任务当时实施安排 |
 | `docs/superpowers/specs` | 用户确认后的任务设计记录，确认后冻结正文 |
 | `docs/superpowers/plans` | 用户批准并进入实施后的任务计划，批准后冻结正文 |
 
 冻结设计和计划只记录任务当时的上下文。旧计划未勾选项、旧设计未来时态和当时的未实现描述均不代表当前状态，也不能推翻当前代码、自动化测试和 Git 合并证据。设计完成、计划勾选或历史说明同样不能单独证明功能已经实现或验收。
+
+每份历史文档必须在标题后声明文档类型、冻结生命周期、当前状态入口、历史目录和使用限制。`docs/superpowers/.history-guardrails-enabled` 启用后，既有历史文档和标识文件禁止修改、删除或重命名；后续决策只能新建设计或计划承接。
+
+仓库级检查入口为 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/Test-RepositoryGuardrails.ps1 -Mode WorkingTree`。它验证历史文档标识与链接、当前状态入口和动态状态禁写规则；暂存与 PR 模式还验证冻结差异和 PR 文档同步结论。
 
 ## 8. 维护规则
 
