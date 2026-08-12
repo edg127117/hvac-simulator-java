@@ -86,6 +86,9 @@ Gaia 1.1 已完成“Python 冻结基准 → Java 忠实转换 → Spring Boot �
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 已同步当前 `main` | 已实现、已测试、冷却塔联调阻塞和下一步 |
 | [`文档生命周期与当前状态判定设计`](docs/superpowers/specs/2026-08-12-document-lifecycle-and-current-state-design.md) | 已确认并冻结 | 历史设计/计划冻结、当前状态证据顺序和新文档承接规则 |
 | [`文档生命周期与当前状态整改实施计划`](docs/superpowers/plans/2026-08-12-document-lifecycle-and-current-state.md) | 已批准并冻结 | 本次规则整改步骤和验证范围；执行结果不回写计划 |
+| [`历史状态隔离与自动防复发设计`](docs/superpowers/specs/2026-08-12-historical-status-isolation-and-guardrails-design.md) | 已确认并冻结 | 历史快照显式标识、当前状态检索隔离和自动防复发边界 |
+| [`历史状态隔离与自动防复发实施计划`](docs/superpowers/plans/2026-08-12-historical-status-isolation-and-guardrails.md) | 已批准并冻结 | 当前治理任务的迁移、Hook、CI、PR 模板与验证安排；执行结果不回写计划 |
+| 历史状态 Guardrails | 已进入 `main` 并完成合并后保护验证 | 历史迁移、规则引擎、隔离测试、Hook、安装器、PR 模板和 GitHub 工作流已完成；`main` 已将 `repository-guardrails` 设为不可绕过的 required check，临时违规 PR #15 已因修改冻结历史文件检查失败且无法合并，验证分支已删除 |
 | [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md) | 已确认、已按纵向切片实施并冻结 | 模型分层、字段语义和验收边界；后续变化新建设计承接 |
 | [`通用自由拓扑仿真平台设计`](docs/superpowers/specs/2026-08-10-free-topology-simulation-platform-design.md) | 已确认、分阶段实施中并冻结 | 不以固定 Gaia 切片冒充自由拓扑；后续变化新建设计承接 |
 | [`Gaia 1.1 平台 MVP 实施计划`](docs/superpowers/plans/2026-08-10-gaia-1.1-platform-mvp.md) | 已执行并冻结 | 只记录任务当时的步骤；未勾选项不代表当前未实现，真实现场仍未验证 |

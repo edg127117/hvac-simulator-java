@@ -1,5 +1,12 @@
 # 文档生命周期与当前状态判定设计
 
+> [!IMPORTANT]
+> 文档类型：设计记录<br>
+> 生命周期：冻结历史快照<br>
+> 当前状态：[PROJECT_STATUS.md](../../../PROJECT_STATUS.md)<br>
+> 历史目录：[docs/superpowers](../)<br>
+> 使用限制：本文记录任务当时的设计，不用于判断功能当前是否已实现或已验证。
+
 ## 1. 背景
 
 仓库已经使用 `AGENTS.md`、`PROJECT_GUIDE.md`、`PROJECT_STATUS.md`、任务设计和实施计划分层记录规则、稳定事实、当前状态与历史决策。但现有规则仍有两个缺口：

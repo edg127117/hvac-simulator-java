@@ -1,1 +1,2 @@
 reference/gaia-1.1/Gaia1.1.py -text whitespace=cr-at-eol
+.githooks/* text eol=lf
