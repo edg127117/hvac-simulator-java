@@ -94,7 +94,11 @@ input:disabled { background: #edf2f3; color: #5f6d73; }
 .run-id { font-size: 12px; font-family: Consolas, monospace; }
 .mqtt-explanation { margin: -5px 0 18px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .mqtt-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.mqtt-form label:nth-child(5), .mqtt-form button { grid-column: 1 / -1; }
+.mqtt-targets, .mqtt-form .full-row, .mqtt-form button { grid-column: 1 / -1; }
+.mqtt-targets { margin: 0; padding: 0; border: 0; }
+.mqtt-targets legend { margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+.mqtt-targets label { display: inline-flex; align-items: center; gap: 7px; margin-right: 18px; color: var(--ink); }
+.mqtt-targets input { width: 17px; min-height: 17px; accent-color: var(--primary); }
 .inline-hint { margin: 14px 0 0; color: var(--muted); font-size: 12px; }
 .delivery-summary { margin-top: 18px; padding-top: 16px; border-top: 1px solid #e3eaec; }
 .results-section { margin-top: 18px; }
@@ -120,7 +124,8 @@ input:disabled { background: #edf2f3; color: #5f6d73; }
   .section-note { margin-top: 10px; }
   .run-toolbar, .parameter-panel, .monitor-panel, .mqtt-panel, .results-section { padding: 20px 16px; }
   .toolbar-fields, .parameter-grid, .mqtt-form, .chart-grid { grid-template-columns: 1fr; }
-  .chart-panel:last-child, .mqtt-form label:nth-child(5), .mqtt-form button { grid-column: auto; }
+  .chart-panel:last-child, .mqtt-form .full-row, .mqtt-form button { grid-column: auto; }
+  .mqtt-targets { grid-column: auto; }
   .mode-switch label { display: flex; margin-bottom: 9px; }
 }
 

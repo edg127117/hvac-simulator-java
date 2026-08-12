@@ -2,6 +2,7 @@ export type SimulationMode = 'BASELINE' | 'SCENARIO'
 export type RunStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED'
 export type DeliveryStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'PARTIAL_FAILED' | 'FAILED'
 export type ParameterScope = 'COMMON' | 'VERSION_SPECIFIC'
+export type CentralHvacMetricTarget = 'WCR_COP' | 'TOWER_EFF'
 
 export interface ModelRelease {
   version: string
@@ -72,6 +73,16 @@ export interface DeliveryView {
   failedMessages: number
   firstError: string | null
   createdAt: string
+}
+
+export interface DeliveryRequest {
+  fromStep: number
+  toStep: number
+  timeMode: 'ORIGINAL' | 'REBASE_TO_NOW'
+  buildingId: string
+  deviceId: string
+  coolingTowerDeviceId: string
+  targets: CentralHvacMetricTarget[]
 }
 
 export interface ApiErrorBody {

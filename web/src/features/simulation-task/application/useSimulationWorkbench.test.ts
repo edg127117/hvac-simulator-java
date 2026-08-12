@@ -96,4 +96,22 @@ describe('simulation workbench', () => {
     expect(workbench.canDeliverMqtt.value).toBe(true)
     expect(workbench.series.value).toEqual({ timestamps: [], groups: [] })
   })
+
+  it('forwards the selected central HVAC targets unchanged', async () => {
+    const workbench = await mountWorkbench()
+    await workbench.startRun()
+    const input = {
+      fromStep: 704,
+      toStep: 740,
+      timeMode: 'REBASE_TO_NOW' as const,
+      buildingId: 'BLD001',
+      deviceId: 'WCR1',
+      coolingTowerDeviceId: 'TOWER1',
+      targets: ['WCR_COP', 'TOWER_EFF'] as const,
+    }
+
+    await workbench.startDelivery(input)
+
+    expect(port.createDelivery).toHaveBeenCalledWith('run-1', input)
+  })
 })

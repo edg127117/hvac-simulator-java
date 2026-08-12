@@ -36,4 +36,27 @@ describe('HTTP simulation platform adapter', () => {
       code: 'INVALID_PARAMETER', title: '参数无效', message: '冷量超出范围。',
     })
   })
+
+  it('sends selected central HVAC targets and tower identity', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(
+      JSON.stringify({ deliveryId: 'delivery-1', status: 'QUEUED' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    ))
+    const input = {
+      fromStep: 704,
+      toStep: 740,
+      timeMode: 'REBASE_TO_NOW' as const,
+      buildingId: 'BLD001',
+      deviceId: 'WCR1',
+      coolingTowerDeviceId: 'TOWER1',
+      targets: ['WCR_COP', 'TOWER_EFF'] as const,
+    }
+
+    await createHttpSimulationPlatformAdapter('/api').createDelivery('run-1', input)
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/simulation-runs/run-1/mqtt-deliveries',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(input) }),
+    )
+  })
 })
