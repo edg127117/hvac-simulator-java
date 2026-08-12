@@ -53,6 +53,7 @@ function updateParameter(code: string, value: number) {
     <div class="workspace-grid">
       <ParameterEditor
         :parameters="workbench.catalog.value?.parameters ?? []"
+        :version-display-name="workbench.catalog.value?.displayName ?? '当前模型'"
         :values="workbench.parameterValues.value"
         :editable="workbench.editable.value"
         :loading="workbench.loadingCatalog.value"

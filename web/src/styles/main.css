@@ -64,6 +64,13 @@ input:disabled { background: #edf2f3; color: #5f6d73; }
 .mode-badge { color: #58656b; background: #edf1f2; }
 .mode-badge.editable { color: #785020; background: #fff2df; }
 .protocol-mark { color: var(--primary); background: #e6f2f4; }
+.parameter-sections { display: grid; gap: 24px; }
+.parameter-scope { display: grid; gap: 14px; }
+.parameter-scope + .parameter-scope { padding-top: 22px; border-top: 1px solid #d9e3e6; }
+.parameter-scope-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.parameter-scope-heading h3 { margin: 0; font-size: 17px; }
+.parameter-scope-heading span { color: var(--muted); font-size: 12px; }
+.parameter-empty { margin: 0; padding: 14px 16px; border-radius: 6px; background: #f4f7f8; color: var(--muted); }
 .parameter-groups { display: grid; gap: 22px; }
 .parameter-groups fieldset { margin: 0; padding: 18px 0 0; border: 0; border-top: 1px solid #e3eaec; }
 .parameter-groups fieldset:first-child { padding-top: 0; border-top: 0; }

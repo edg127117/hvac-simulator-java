@@ -1,6 +1,7 @@
 export type SimulationMode = 'BASELINE' | 'SCENARIO'
 export type RunStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED'
 export type DeliveryStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'PARTIAL_FAILED' | 'FAILED'
+export type ParameterScope = 'COMMON' | 'VERSION_SPECIFIC'
 
 export interface ModelRelease {
   version: string
@@ -17,6 +18,7 @@ export interface ModelParameter {
   defaultValue: number
   minimum: number
   maximum: number
+  scope: ParameterScope
   editable: boolean
   readOnlyReason: string | null
 }
