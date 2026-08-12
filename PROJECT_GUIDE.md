@@ -136,30 +136,46 @@ CLI 不传模型版本时保持 Gaia 1.0 兼容。Gaia 1.0 生成 17 字段 CSV 
 
 ## 7. 文档导航和生命周期
 
+### 7.1 当前有效入口
+
 | 入口 | 用途 | 更新时机 |
 |---|---|---|
-| [`AGENTS.md`](AGENTS.md) | 核心工作规则和按任务读取的规范路由 | 固定规则或路由变化时 |
-| [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) | 稳定项目地图、目标边界、数据链路和运行入口 | 稳定项目事实变化时 |
-| [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 当前完成项、未完成项、风险和下一步 | 当前版本状态变化时 |
+| [`AGENTS.md`](AGENTS.md) | 核心工作规则、文档生命周期和按任务读取的规范路由 | 固定规则或路由变化时 |
+| [`PROJECT_GUIDE.md`](PROJECT_GUIDE.md) | 稳定项目地图、目标边界、当前正式设计导航、数据链路和运行入口 | 稳定项目事实或正式设计入口变化时 |
+| [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 当前完成项、未完成项、验证边界、风险和下一步 | 当前版本状态变化时 |
 | [`.agents/skills/hvac-simulation-verification/SKILL.md`](.agents/skills/hvac-simulation-verification/SKILL.md) | Codex 执行模型、基准、产物和图表验证的完整矩阵 | 可执行仿真验证流程变化时 |
 | [`仿真验证说明`](docs/development/simulation-verification.md) | 面向开发者的忠实转换、逐项对照、容差和证据边界 | 仿真验证原则变化时 |
 | [`HVAC 仿真代码注释专项规则`](docs/development/code-comments.md) | 公式、单位、状态推进、随机顺序和模型兼容注释要求 | Java 仿真专项注释规则变化时 |
-| [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | 第一阶段架构、忠实兼容边界、误差和验收标准 | 第一阶段设计决策变化时 |
-| [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) | 早期固定 HVAC 平台设计，作为历史演进记录保留 | 不再更新，当前平台目标查看自由拓扑设计 |
-| [`通用自由拓扑仿真平台设计`](docs/superpowers/specs/2026-08-10-free-topology-simulation-platform-design.md) | 自由组合设备、公共能源端口、拓扑求解、时间、数据、工作台和协议的当前正式平台设计 | 自由拓扑正式平台设计决策变化时 |
-| [`设备运行时契约与公共能量数据模型设计`](docs/superpowers/specs/2026-08-10-device-runtime-contract-and-shared-energy-data-model-design.md) | 强类型运行值、参数、状态、单步结果、错误和公共执行边界 | 设备公共运行时契约变化时 |
-| [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md) | Gaia 1.1 的版本差异、测量层、指标语义、基准和验收设计 | Gaia 1.1 接入决策变化时 |
-| [`Gaia 1.1 平台 MVP 实施计划`](docs/superpowers/plans/2026-08-10-gaia-1.1-platform-mvp.md) | 本纵向切片的文件、接口、测试、阶段验收和提交边界 | 作为本任务实施记录保留 |
-| [`版本化参数与冷却塔效率接入设计`](docs/superpowers/specs/2026-08-11-gaia-versioned-parameters-and-tower-efficiency-design.md) | 独立参数目录、参数归属和可选冷却塔真实测点合同 | 相关兼容或接入决策变化时 |
-| `docs/superpowers/specs` | 经确认的任务设计和取舍 | 新功能或核心行为设计确认后 |
-| `docs/superpowers/plans` | 任务实施步骤和验证方案 | 设计确认并进入实施前 |
 
-设计和计划记录任务当时的上下文。判断当前行为时，应优先核验当前代码、自动化测试、`PROJECT_STATUS.md` 和已合并决策。
+### 7.2 当前正式设计
+
+| 设计 | 当前边界 |
+|---|---|
+| [`Gaia 1.0 Java 忠实转换设计`](docs/superpowers/specs/2026-08-04-gaia-java-port-design.md) | Gaia 1.0 第一阶段架构、忠实兼容边界、误差和验收标准 |
+| [`通用自由拓扑仿真平台设计`](docs/superpowers/specs/2026-08-10-free-topology-simulation-platform-design.md) | 当前正式平台目标；自由组合设备、公共能源端口、拓扑求解、时间、数据、工作台和协议边界 |
+| [`设备运行时契约与公共能量数据模型设计`](docs/superpowers/specs/2026-08-10-device-runtime-contract-and-shared-energy-data-model-design.md) | 强类型运行值、参数、状态、单步结果、错误和公共执行边界 |
+| [`Gaia 1.1 模型接入设计`](docs/superpowers/specs/2026-08-06-gaia-1.1-integration-design.md) | Gaia 1.1 的版本差异、测量层、指标语义、基准和验收边界 |
+| [`版本化参数与冷却塔效率接入设计`](docs/superpowers/specs/2026-08-11-gaia-versioned-parameters-and-tower-efficiency-design.md) | 独立参数目录、参数归属和可选冷却塔真实测点合同 |
+| [`文档生命周期与当前状态判定设计`](docs/superpowers/specs/2026-08-12-document-lifecycle-and-current-state-design.md) | 历史设计/计划冻结、当前状态证据顺序和新文档承接规则 |
+
+当前正式设计同样是冻结记录。正式决策变化时必须新建带日期设计，明确补充、替代或废止范围，再更新本节导航；不得回写旧设计正文。
+
+### 7.3 冻结历史记录
+
+| 记录 | 历史用途 |
+|---|---|
+| [`独立 HVAC 仿真平台设计`](docs/superpowers/specs/2026-08-04-hvac-simulation-platform-design.md) | 早期固定 HVAC 平台设计；已由自由拓扑平台设计承接，不再代表当前最终平台边界 |
+| [`Gaia 1.1 平台 MVP 实施计划`](docs/superpowers/plans/2026-08-10-gaia-1.1-platform-mvp.md) | 固定模型纵向切片任务当时的文件、接口、测试和阶段验收安排 |
+| [`文档生命周期与当前状态整改实施计划`](docs/superpowers/plans/2026-08-12-document-lifecycle-and-current-state.md) | 本次规则整改的实施步骤和验证安排 |
+| `docs/superpowers/specs` | 用户确认后的任务设计记录，确认后冻结正文 |
+| `docs/superpowers/plans` | 用户批准并进入实施后的任务计划，批准后冻结正文 |
+
+冻结设计和计划只记录任务当时的上下文。旧计划未勾选项、旧设计未来时态和当时的未实现描述均不代表当前状态，也不能推翻当前代码、自动化测试和 Git 合并证据。设计完成、计划勾选或历史说明同样不能单独证明功能已经实现或验收。
 
 ## 8. 维护规则
 
 - 项目定位、稳定边界、核心数据链路、运行入口、输出契约或文档导航变化时更新本文件。
 - 项目阶段、完成项、阻塞、风险、技术债或下一步变化时只更新 `PROJECT_STATUS.md`。
-- 具体任务设计和实施步骤保存在任务级文档中，不复制到本文件。
+- 具体任务设计和实施步骤保存在任务级文档中，不复制到本文件；设计确认或计划批准后不得回写，后续变化新建文档承接。
 - 单次命令、错误日志、本机路径、端口、进程和临时输出保留在当前会话。
 - 发现文档与代码冲突时先核验代码和测试；证据不足时在 `PROJECT_STATUS.md` 标记为待核验。
