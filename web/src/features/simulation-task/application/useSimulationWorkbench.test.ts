@@ -4,12 +4,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SimulationPlatformPort } from '../ports/SimulationPlatformPort'
 import { useSimulationWorkbench } from './useSimulationWorkbench'
 
-function parameterCatalog(mode: 'BASELINE' | 'SCENARIO', defaultValue: number) {
+function parameterCatalog(
+  version: 'gaia-1.0' | 'gaia-1.1',
+  mode: 'BASELINE' | 'SCENARIO',
+  defaultValue: number,
+) {
   return {
-    version: 'gaia-1.1', displayName: 'Gaia 1.1', mode,
+    version, displayName: version === 'gaia-1.1' ? 'Gaia 1.1' : 'Gaia 1.0', mode,
     parameters: [{
       code: 'coolingCapacityKw', label: '额定制冷量', group: '冷水机组', unit: 'kW',
       valueType: 'NUMBER' as const, defaultValue, minimum: 1, maximum: 2000,
+      scope: 'COMMON' as const,
       editable: mode === 'SCENARIO', readOnlyReason: mode === 'BASELINE' ? '基准冻结' : null,
     }],
   }
@@ -24,8 +29,8 @@ describe('simulation workbench', () => {
         { version: 'gaia-1.0', displayName: 'Gaia 1.0', outputFieldCount: 17 },
         { version: 'gaia-1.1', displayName: 'Gaia 1.1', outputFieldCount: 30 },
       ]),
-      getParameters: vi.fn().mockImplementation((_version, mode) => Promise.resolve(
-        parameterCatalog(mode, mode === 'BASELINE' ? 700 : 710),
+      getParameters: vi.fn().mockImplementation((version, mode) => Promise.resolve(
+        parameterCatalog(version, mode, version === 'gaia-1.0' ? 650 : mode === 'BASELINE' ? 700 : 710),
       )),
       createRun: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'QUEUED' }),
       getRun: vi.fn().mockResolvedValue({
@@ -62,6 +67,20 @@ describe('simulation workbench', () => {
     expect(workbench.parameterValues.value.coolingCapacityKw).toBe(710)
   })
 
+  it('replaces all parameter values when the model version changes', async () => {
+    const workbench = await mountWorkbench()
+    workbench.parameterValues.value = {
+      ...workbench.parameterValues.value,
+      'measurement.sensorBias': 9,
+    }
+
+    workbench.selectedVersion.value = 'gaia-1.0'
+    await workbench.loadCatalog()
+
+    expect(workbench.parameterValues.value).toEqual({ coolingCapacityKw: 650 })
+    expect(workbench.catalog.value?.displayName).toBe('Gaia 1.0')
+  })
+
   it('sends edited scenario parameters and enables MQTT after a completed Gaia 1.1 run', async () => {
     const workbench = await mountWorkbench()
     workbench.mode.value = 'SCENARIO'
@@ -76,5 +95,23 @@ describe('simulation workbench', () => {
     }))
     expect(workbench.canDeliverMqtt.value).toBe(true)
     expect(workbench.series.value).toEqual({ timestamps: [], groups: [] })
+  })
+
+  it('forwards the selected central HVAC targets unchanged', async () => {
+    const workbench = await mountWorkbench()
+    await workbench.startRun()
+    const input = {
+      fromStep: 704,
+      toStep: 740,
+      timeMode: 'REBASE_TO_NOW' as const,
+      buildingId: 'BLD001',
+      deviceId: 'WCR1',
+      coolingTowerDeviceId: 'TOWER1',
+      targets: ['WCR_COP', 'TOWER_EFF'] as const,
+    }
+
+    await workbench.startDelivery(input)
+
+    expect(port.createDelivery).toHaveBeenCalledWith('run-1', input)
   })
 })

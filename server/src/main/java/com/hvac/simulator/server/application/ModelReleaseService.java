@@ -39,6 +39,6 @@ public class ModelReleaseService {
         return new Parameter(
                 parameter.code(), parameter.label(), parameter.group(), parameter.unit(),
                 parameter.valueType(), parameter.defaultValue(), parameter.minimum(), parameter.maximum(),
-                editable, reason);
+                parameter.scope(), editable, reason);
     }
 }

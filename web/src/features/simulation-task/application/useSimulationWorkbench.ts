@@ -2,6 +2,7 @@ import { computed, onMounted, ref } from 'vue'
 import type { SimulationPlatformPort } from '../ports/SimulationPlatformPort'
 import type {
   DeliveryView,
+  DeliveryRequest,
   ModelRelease,
   ParameterCatalog,
   RunView,
@@ -132,13 +133,7 @@ export function useSimulationWorkbench(platform: SimulationPlatformPort) {
     }
   }
 
-  async function startDelivery(input: {
-    fromStep: number
-    toStep: number
-    timeMode: 'ORIGINAL' | 'REBASE_TO_NOW'
-    buildingId: string
-    deviceId: string
-  }) {
+  async function startDelivery(input: DeliveryRequest) {
     if (!run.value || !canDeliverMqtt.value) return
     delivering.value = true
     error.value = null

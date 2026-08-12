@@ -12,6 +12,7 @@ public record ModelParameterDescriptor(
         double defaultValue,
         double minimum,
         double maximum,
+        ParameterScope scope,
         boolean editable,
         String readOnlyReason) {
 
@@ -21,6 +22,7 @@ public record ModelParameterDescriptor(
         Objects.requireNonNull(group, "参数分组不能为空");
         Objects.requireNonNull(unit, "参数单位不能为空");
         Objects.requireNonNull(valueType, "参数类型不能为空");
+        Objects.requireNonNull(scope, "参数归属不能为空");
         if (!Double.isFinite(defaultValue) || !Double.isFinite(minimum)
                 || !Double.isFinite(maximum) || minimum > defaultValue || defaultValue > maximum) {
             throw new IllegalArgumentException("参数默认值或范围无效：" + code);

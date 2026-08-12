@@ -26,7 +26,8 @@ class CentralHvacPointMapperTest {
     void mapsOnlyFourMeasuredWcrPointsAndPreservesCop() throws Exception {
         Gaia11SimulationStep step = runningStep();
 
-        List<CentralHvacPoint> points = mapper.map(step, "BLD001", "WCR1", 1_785_398_400_000L);
+        List<CentralHvacPoint> points = mapper.mapWcrCop(
+                step, "BLD001", "WCR1", 1_785_398_400_000L);
 
         assertEquals(List.of("WCR1_TWin", "WCR1_TWout", "WCR1_Flow", "WCR1_PPE"),
                 points.stream().map(CentralHvacPoint::pointCode).toList());
@@ -42,9 +43,43 @@ class CentralHvacPointMapperTest {
         assertTrue(message.payload().contains("\"timestamp\":1785398400000"));
     }
 
+    @Test
+    void mapsTowerInletOutletAndWetBulbOnlyWhileTowerRuns() throws Exception {
+        var result = simulationResult();
+        Gaia11SimulationStep running = result.steps().stream()
+                .filter(step -> step.coolingTowerFanPowerKw() > 0.0
+                        && step.coolingWaterFlowSensorM3PerSecond() > 0.0)
+                .findFirst().orElseThrow();
+        Gaia11SimulationStep stopped = result.steps().stream()
+                .filter(step -> step.coolingTowerFanPowerKw() == 0.0)
+                .findFirst().orElseThrow();
+
+        List<CentralHvacPoint> points = mapper.mapTowerEfficiency(
+                running, "BLD001", "TOWER1", 1_785_398_400_000L);
+
+        assertEquals(List.of("TOWER1_TCWin", "TOWER1_TCWout", "TOWER1_TWB"),
+                points.stream().map(CentralHvacPoint::pointCode).toList());
+        assertEquals(running.coolingWaterReturnSensorC(), points.get(0).value());
+        assertEquals(running.coolingWaterSupplySensorC(), points.get(1).value());
+        assertEquals(running.wetBulbC(), points.get(2).value());
+        double expected = (running.coolingWaterReturnSensorC()
+                - running.coolingWaterSupplySensorC())
+                / (running.coolingWaterReturnSensorC() - running.wetBulbC()) * 100.0;
+        double actual = (points.get(0).value() - points.get(1).value())
+                / (points.get(0).value() - points.get(2).value()) * 100.0;
+        assertEquals(expected, actual, 1e-12);
+        assertTrue(mapper.mapTowerEfficiency(
+                stopped, "BLD001", "TOWER1", 1_785_398_400_000L).isEmpty());
+    }
+
     private Gaia11SimulationStep runningStep() throws Exception {
+        return simulationResult().steps().stream()
+                .filter(step -> step.chillerPowerKw() > 0.0).findFirst().orElseThrow();
+    }
+
+    private com.hvac.simulator.simulation.Gaia11SimulationResult simulationResult() throws Exception {
         SimulationConfig config = SimulationConfig.gaiaDemo(20240810L);
-        var result = new Gaia11Simulator(
+        return new Gaia11Simulator(
                 config,
                 new BuildingThermalModel(BuildingEnvelope.gaiaDefaults(), InternalLoad.gaiaDefaults()),
                 new HvacSystem(HvacParameters.gaiaDefaults()),
@@ -52,6 +87,5 @@ class CentralHvacPointMapperTest {
                 new FrozenRandomDrawSource("gaia-baseline/gaia-1.1/python-random-draws.csv"))
                 .run(new Gaia11BaselineWeatherSource(
                         "gaia-baseline/gaia-1.1/python-weather.csv").load(config));
-        return result.steps().stream().filter(step -> step.chillerPowerKw() > 0.0).findFirst().orElseThrow();
     }
 }

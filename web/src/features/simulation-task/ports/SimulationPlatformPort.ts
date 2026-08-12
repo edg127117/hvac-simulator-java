@@ -1,5 +1,6 @@
 import type {
   DeliveryView,
+  DeliveryRequest,
   ModelRelease,
   ParameterCatalog,
   RunView,
@@ -18,12 +19,7 @@ export interface SimulationPlatformPort {
   }): Promise<{ runId: string; status: RunView['status'] }>
   getRun(runId: string): Promise<RunView>
   getSeries(runId: string): Promise<SeriesResponse>
-  createDelivery(runId: string, input: {
-    fromStep: number
-    toStep: number
-    timeMode: 'ORIGINAL' | 'REBASE_TO_NOW'
-    buildingId: string
-    deviceId: string
-  }): Promise<{ deliveryId: string; status: DeliveryView['status'] }>
+  createDelivery(runId: string, input: DeliveryRequest):
+    Promise<{ deliveryId: string; status: DeliveryView['status'] }>
   getDelivery(runId: string, deliveryId: string): Promise<DeliveryView>
 }

@@ -12,7 +12,11 @@ import com.hvac.simulator.server.domain.MqttTimeMode;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -73,10 +77,24 @@ public class MqttDeliveryService {
         }
         String buildingId = defaultValue(request.buildingId(), "BLD001");
         String deviceId = defaultValue(request.deviceId(), "WCR1");
-        var delivery = new MqttDelivery(UUID.randomUUID(), runId, (to - from + 1) * 4);
+        String coolingTowerDeviceId = defaultValue(request.coolingTowerDeviceId(), "TOWER1");
+        if (request.targets() != null && request.targets().stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("中央空调指标不能为空");
+        }
+        Set<CentralHvacMetricTarget> targets = request.targets() == null
+                ? Set.of(CentralHvacMetricTarget.WCR_COP) : Set.copyOf(request.targets());
+        if (targets.isEmpty()) {
+            throw new IllegalArgumentException("至少选择一个中央空调指标");
+        }
+        List<MqttPublishMessage> messages = prepareMessages(
+                run.output().gaia11().steps(), from, to, request.timeMode(),
+                buildingId, deviceId, coolingTowerDeviceId, targets);
+        if (messages.isEmpty()) {
+            throw new IllegalArgumentException("所选范围没有冷却塔运行时间步");
+        }
+        var delivery = new MqttDelivery(UUID.randomUUID(), runId, messages.size());
         deliveries.put(delivery.id(), delivery);
-        executor.execute(() -> publish(delivery, run.output().gaia11().steps(), from, to,
-                request.timeMode(), buildingId, deviceId));
+        executor.execute(() -> publish(delivery, messages));
         return new Created(delivery.id(), MqttDeliveryStatus.QUEUED);
     }
 
@@ -91,32 +109,50 @@ public class MqttDeliveryService {
                 delivery.createdAt());
     }
 
-    private void publish(
-            MqttDelivery delivery,
-            java.util.List<com.hvac.simulator.simulation.Gaia11SimulationStep> steps,
+    private List<MqttPublishMessage> prepareMessages(
+            List<com.hvac.simulator.simulation.Gaia11SimulationStep> steps,
             int from,
             int to,
             MqttTimeMode timeMode,
             String buildingId,
-            String deviceId) {
-        delivery.start();
+            String deviceId,
+            String coolingTowerDeviceId,
+            Set<CentralHvacMetricTarget> targets) {
         Instant rebaseStart = Instant.now().truncatedTo(ChronoUnit.MINUTES)
                 .minus(to - from + 1L, ChronoUnit.MINUTES);
+        List<MqttPublishMessage> messages = new ArrayList<>();
         for (int index = from; index <= to; index++) {
             var step = steps.get(index);
             long timestamp = timeMode == MqttTimeMode.ORIGINAL
                     ? step.timestamp().atZone(SOURCE_ZONE).toInstant().toEpochMilli()
                     : rebaseStart.plus(index - from, ChronoUnit.MINUTES).toEpochMilli();
-            for (CentralHvacPoint point : mapper.map(step, buildingId, deviceId, timestamp)) {
-                try {
-                    publisher.publish(mapper.message(properties.getTopic(), point));
-                    delivery.success();
-                } catch (Exception exception) {
-                    delivery.failure("MQTT 发布失败：" + exception.getClass().getSimpleName());
-                }
+            if (targets.contains(CentralHvacMetricTarget.WCR_COP)) {
+                addMessages(messages, mapper.mapWcrCop(step, buildingId, deviceId, timestamp));
+            }
+            if (targets.contains(CentralHvacMetricTarget.TOWER_EFF)) {
+                addMessages(messages, mapper.mapTowerEfficiency(
+                        step, buildingId, coolingTowerDeviceId, timestamp));
+            }
+        }
+        return List.copyOf(messages);
+    }
+
+    /** 发送固定消息快照，保证任务总数不受异步执行时模型或请求状态变化影响。 */
+    private void publish(MqttDelivery delivery, List<MqttPublishMessage> messages) {
+        delivery.start();
+        for (MqttPublishMessage message : messages) {
+            try {
+                publisher.publish(message);
+                delivery.success();
+            } catch (Exception exception) {
+                delivery.failure("MQTT 发布失败：" + exception.getClass().getSimpleName());
             }
         }
         delivery.finish();
+    }
+
+    private void addMessages(List<MqttPublishMessage> messages, List<CentralHvacPoint> points) {
+        points.stream().map(point -> mapper.message(properties.getTopic(), point)).forEach(messages::add);
     }
 
     private String defaultValue(String value, String fallback) {

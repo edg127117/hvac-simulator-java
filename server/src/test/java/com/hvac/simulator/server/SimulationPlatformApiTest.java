@@ -68,8 +68,16 @@ class SimulationPlatformApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.parameters[0].defaultValue").value(10000.0))
                 .andExpect(jsonPath("$.parameters[0].editable").value(true))
+                .andExpect(jsonPath("$.parameters[?(@.code == 'hvac.coolingSetpointC')].scope")
+                        .value("COMMON"))
                 .andExpect(jsonPath("$.parameters[?(@.code == 'measurement.sensorBias')].defaultValue")
-                        .value(0.0));
+                        .value(0.0))
+                .andExpect(jsonPath("$.parameters[?(@.code == 'measurement.sensorBias')].scope")
+                        .value("VERSION_SPECIFIC"));
+
+        mvc.perform(get("/api/model-releases/gaia-1.0/parameters").param("mode", "SCENARIO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.parameters[?(@.scope == 'VERSION_SPECIFIC')]").isEmpty());
     }
 
     @Test
