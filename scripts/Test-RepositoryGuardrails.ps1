@@ -191,16 +191,58 @@ function Test-PullRequestSections {
         return
     }
 
-    foreach ($heading in @('状态影响', '检查范围', '文档同步', '历史文档', '验证分级')) {
+    $normalizedBody = $PullRequestBody.Replace("`r`n", "`n").Replace("`r", "`n")
+    $withoutInstructions = [regex]::Replace($normalizedBody, '(?s)<!--.*?-->', '').Trim()
+    $usesUnifiedContract = $withoutInstructions -match '(?m)^##\s+(变更内容|验证结果|注释检查|文档与 ADR|风险与未验证项)\s*$'
+    if (-not $usesUnifiedContract) {
+        # 已打开的旧格式 PR 保持兼容；新 PR 由仓库模板进入统一合同。
+        foreach ($heading in @('状态影响', '检查范围', '文档同步', '历史文档', '验证分级')) {
+            $escapedHeading = [regex]::Escape($heading)
+            $pattern = "(?ms)^##\s+$escapedHeading\s*`r?`n(.*?)(?=^##\s+|\z)"
+            $match = [regex]::Match($withoutInstructions, $pattern)
+            if (-not $match.Success) {
+                Add-Violation "PR 正文缺少章节: ## $heading"
+                continue
+            }
+            if ($match.Groups[1].Value -notmatch '(?im)^\s*-\s*\[[xX]\]') {
+                Add-Violation "PR 正文章节未选择任何结论: ## $heading"
+            }
+        }
+        return
+    }
+
+    $sections = @{}
+    foreach ($heading in @('变更内容', '状态影响', '验证结果', '注释检查', '文档与 ADR', '风险与未验证项')) {
         $escapedHeading = [regex]::Escape($heading)
         $pattern = "(?ms)^##\s+$escapedHeading\s*`r?`n(.*?)(?=^##\s+|\z)"
-        $match = [regex]::Match($PullRequestBody, $pattern)
-        if (-not $match.Success) {
+        $match = [regex]::Match($withoutInstructions, $pattern)
+        if (-not $match.Success -or [string]::IsNullOrWhiteSpace($match.Groups[1].Value)) {
             Add-Violation "PR 正文缺少章节: ## $heading"
             continue
         }
-        if ($match.Groups[1].Value -notmatch '(?im)^\s*-\s*\[[xX]\]') {
+        $sections[$heading] = $match.Groups[1].Value.Trim()
+    }
+
+    foreach ($heading in @('状态影响', '验证结果', '文档与 ADR')) {
+        if ($sections.ContainsKey($heading) -and
+            $sections[$heading] -notmatch '(?im)^\s*-\s*\[[xX]\]') {
             Add-Violation "PR 正文章节未选择任何结论: ## $heading"
+        }
+    }
+
+    $requiredFields = @{
+        '状态影响' = @('说明')
+        '验证结果' = @('专项范围', '实际命令与结果', '未执行及原因')
+        '注释检查' = @('风险级别', '检查范围', '结论')
+        '文档与 ADR' = @('说明')
+        '风险与未验证项' = @('风险', '未验证项')
+    }
+    foreach ($heading in $requiredFields.Keys) {
+        if (-not $sections.ContainsKey($heading)) { continue }
+        foreach ($field in $requiredFields[$heading]) {
+            if ($sections[$heading] -notmatch ('(?m)^\s*' + [regex]::Escape($field) + '\s*[：:]\s*\S[^\r\n]*$')) {
+                Add-Violation "PR 正文字段未填写: $heading/$field"
+            }
         }
     }
 }
