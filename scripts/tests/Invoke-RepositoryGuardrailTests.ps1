@@ -5,6 +5,7 @@ $ErrorActionPreference = 'Stop'
 $guardrailScript = (Resolve-Path (Join-Path $PSScriptRoot '..\Test-RepositoryGuardrails.ps1')).Path
 $hookInstallerScript = Join-Path $PSScriptRoot '..\Install-RepositoryHooks.ps1'
 $repositoryHook = Join-Path $PSScriptRoot '..\..\.githooks\pre-commit'
+$pullRequestTemplate = Join-Path $PSScriptRoot '..\..\.github\pull_request_template.md'
 $failures = [System.Collections.Generic.List[string]]::new()
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 $utf8Bom = [System.Text.UTF8Encoding]::new($true)
@@ -61,6 +62,32 @@ function Get-ValidPullRequestBody {
         '- [x] 只执行允许的迁移或新增'
         '## 验证分级'
         '- [x] Guardrails 自动化测试'
+    ) -join "`n"
+}
+
+function Get-UnifiedPullRequestBody {
+    return @(
+        '## 变更内容'
+        '统一 PR 合同。'
+        '## 状态影响'
+        '- [x] 无状态变化'
+        '说明：仅调整流程。'
+        '## 验证结果'
+        '- [x] 本次仅文档/流程检查'
+        '专项范围：不适用'
+        '实际命令与结果：Guardrail 通过。'
+        '未执行及原因：未运行无关模型测试。'
+        '## 注释检查'
+        '风险级别：不涉及生产代码'
+        '检查范围：仅检查流程文件。'
+        '结论：无需修改生产代码注释。'
+        '## 文档与 ADR'
+        '- [x] 无需更新当前文档'
+        '- [x] 未修改既有冻结历史文件'
+        '说明：当前状态未变化。'
+        '## 风险与未验证项'
+        '风险：无。'
+        '未验证项：无。'
     ) -join "`n"
 }
 
@@ -296,8 +323,11 @@ Invoke-GuardrailCase 'initial-migration' {
     Invoke-Git $root commit -m migration
 } 0 -Mode PullRequest -MarkerEnabled:$false -PullRequestBody (Get-ValidPullRequestBody)
 
-$validBody = Get-ValidPullRequestBody
-foreach ($heading in @('状态影响', '检查范围', '文档同步', '历史文档', '验证分级')) {
+$legacyBody = Get-ValidPullRequestBody
+Invoke-GuardrailCase 'pr-legacy-body-compatible' $noChange 0 -Mode PullRequest -PullRequestBody $legacyBody
+
+$validBody = Get-UnifiedPullRequestBody
+foreach ($heading in @('变更内容', '状态影响', '验证结果', '注释检查', '文档与 ADR', '风险与未验证项')) {
     $bodyWithoutSection = [regex]::Replace(
         $validBody,
         "(?ms)^## $([regex]::Escape($heading))\r?\n.*?(?=^## |\z)",
@@ -306,8 +336,27 @@ foreach ($heading in @('状态影响', '检查范围', '文档同步', '历史�
     Invoke-GuardrailCase "pr-missing-$heading" $noChange 1 -Mode PullRequest -PullRequestBody $bodyWithoutSection
 }
 
-$uncheckedBody = $validBody.Replace('- [x] 已同步当前项目文档', '- [ ] 已同步当前项目文档')
+$uncheckedBody = $validBody.Replace('- [x] 无状态变化', '- [ ] 无状态变化')
 Invoke-GuardrailCase 'pr-unchecked-section' $noChange 1 -Mode PullRequest -PullRequestBody $uncheckedBody
+
+$missingFieldBody = $validBody.Replace('未验证项：无。', '未验证项：')
+Invoke-GuardrailCase 'pr-missing-field' $noChange 1 -Mode PullRequest -PullRequestBody $missingFieldBody
+
+if (-not (Test-Path -LiteralPath $pullRequestTemplate)) {
+    $failures.Add('pull-request-template missing')
+} else {
+    $templateText = [System.IO.File]::ReadAllText($pullRequestTemplate)
+    foreach ($heading in @('变更内容', '状态影响', '验证结果', '注释检查', '文档与 ADR', '风险与未验证项')) {
+        if ($templateText -notmatch ('(?m)^##\s+' + [regex]::Escape($heading) + '\s*$')) {
+            $failures.Add("pull-request-template missing heading: $heading")
+        }
+    }
+    foreach ($field in @('说明：', '专项范围：', '实际命令与结果：', '未执行及原因：', '风险级别：', '检查范围：', '结论：', '风险：', '未验证项：')) {
+        if (-not $templateText.Contains($field)) {
+            $failures.Add("pull-request-template missing field: $field")
+        }
+    }
+}
 
 if (-not (Test-Path -LiteralPath $hookInstallerScript) -or -not (Test-Path -LiteralPath $repositoryHook)) {
     $failures.Add('hook-files-missing expected Hook and installer implementation files')
